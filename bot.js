@@ -1373,9 +1373,6 @@ _${randomWish}_
                 const subscriberData = subscribers[jid];
                 await scheduleRemindersForUser(sock, jid, subscriberData.city, subscriberData.name || 'Kawan');
             }
-        }
-    });
-
             
                         // --- JADWAL BARU: MENGIRIM AYAT ACAK 2X SEHARI (12:40 & 18:40) ---
             // Aturan: Berjalan pada menit ke-40, saat jam 12 dan 18.
