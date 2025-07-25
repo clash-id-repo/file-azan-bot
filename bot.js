@@ -803,11 +803,15 @@ async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
     const sock = makeWASocket({
-        logger: pino({ level: 'silent' }),
+        // Perubahan 1: Ubah 'silent' menjadi 'info' agar kode bisa muncul
+        logger: pino({ level: 'info' }), 
         auth: state,
         browser: ['ARHBot', 'Chrome', '18.3.0'],
-        syncFullHistory: false
+        syncFullHistory: false,
+        // Perubahan 2: Tambahkan baris ini untuk meminta pairing code
+        pairingCode: true
     });
+
 
     sock.ev.on('creds.update', saveCreds);
 
@@ -1353,21 +1357,25 @@ _${randomWish}_
     });
 
     sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect, qr } = update;
-        if (qr) {
-            console.log('QR Code diterima, silakan scan:');
-            qrcode.generate(qr, { small: true });
-        }
+        const { connection, lastDisconnect } = update;
+        
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('Koneksi terputus:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
-            if (shouldReconnect) connectToWhatsApp();
+            if (shouldReconnect) {
+                connectToWhatsApp();
+            }
         } else if (connection === 'open') {
             console.log('Berhasil terhubung ke WhatsApp! Bot siap digunakan.');
+            
+            // Mengatur semua jadwal setelah koneksi berhasil
             for (const jid in subscribers) {
                 const subscriberData = subscribers[jid];
                 await scheduleRemindersForUser(sock, jid, subscriberData.city, subscriberData.name || 'Kawan');
             }
+        }
+    });
+
             
                         // --- JADWAL BARU: MENGIRIM AYAT ACAK 2X SEHARI (12:40 & 18:40) ---
             // Aturan: Berjalan pada menit ke-40, saat jam 12 dan 18.
