@@ -13,6 +13,8 @@ const schedule = require('node-schedule');
 // --- PENAMBAHAN UNTUK AUTO-RESTART ---
 const chokidar = require('chokidar');
 const { spawn } = require('child_process');
+const http = require('http'); // <-- Pastikan ini ada di atas
+
 
 // --- PENGATURAN & VARIABEL GLOBAL ---
 const SUBSCRIBERS_FILE = 'subscribers.json';
@@ -1447,10 +1449,29 @@ _${randomWish}_
     });
 }
 
+
+// =======================================================
+// >>> MULAI KODE KEEP-ALIVE (LETAKKAN DI SINI) <<<
+// =======================================================
+
+const PORT = process.env.PORT || 3000;
+
+http.createServer((req, res) => {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.end('Bot is alive and running!');
+}).listen(PORT, () => {
+  console.log(`[SERVER] Keep-alive server berjalan di port ${PORT}`);
+});
+
+// =======================================================
+// >>> SELESAI KODE KEEP-ALIVE <<<
+// =======================================================
+
 // Memulai koneksi bot
 connectToWhatsApp();
 
-// --- KODE AUTO-RESTART ---
+
+// /--- KODE AUTO-RESTART ---
 const watcher = chokidar.watch(__filename);
 
 watcher.on('change', path => {
