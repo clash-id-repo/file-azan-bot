@@ -561,7 +561,8 @@ function formatUptime(startTime) {
 
 
 function calculateCountdown(timings) {
-    const now = new Date();
+    // Menggunakan Luxon untuk mendapatkan waktu saat ini di zona WIB
+    const nowInJakarta = DateTime.now().setZone('Asia/Jakarta');
     const prayerOrder = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     let nextPrayerName = null;
     let nextPrayerTime = null;
@@ -569,33 +570,35 @@ function calculateCountdown(timings) {
     for (const prayerName of prayerOrder) {
         const prayerTimeStr = timings[prayerName];
         if (!prayerTimeStr) continue;
-        
-        const [hour, minute] = prayerTimeStr.split(':');
-        const prayerDate = new Date();
-        prayerDate.setHours(parseInt(hour), parseInt(minute), 0, 0);
 
-        if (prayerDate > now) {
+        const [hour, minute] = prayerTimeStr.split(':');
+        // Membuat objek waktu sholat di zona WIB juga
+        let prayerDateTime = nowInJakarta.set({ hour: parseInt(hour), minute: parseInt(minute), second: 0, millisecond: 0 });
+
+        // Perbandingan sekarang akurat karena keduanya dalam zona waktu yang sama
+        if (prayerDateTime > nowInJakarta) {
             nextPrayerName = prayerName;
-            nextPrayerTime = prayerDate;
+            nextPrayerTime = prayerDateTime;
             break;
         }
     }
 
+    // Jika sudah melewati Isya, sholat berikutnya adalah Subuh besok
     if (!nextPrayerName) {
         nextPrayerName = 'Fajr';
         const [hour, minute] = timings.Fajr.split(':');
-        nextPrayerTime = new Date();
-        nextPrayerTime.setDate(nextPrayerTime.getDate() + 1);
-        nextPrayerTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
+        nextPrayerTime = nowInJakarta.plus({ days: 1 }).set({ hour: parseInt(hour), minute: parseInt(minute), second: 0, millisecond: 0 });
     }
 
-    const diff = nextPrayerTime.getTime() - now.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
+    // Menggunakan Luxon untuk menghitung selisih waktu
+    const diff = nextPrayerTime.diff(nowInJakarta, ['hours', 'minutes']).toObject();
+    const hours = Math.floor(diff.hours);
+    const minutes = Math.floor(diff.minutes);
+    
     const translatedPrayerName = PRAYER_NAMES_MAP[nextPrayerName] || nextPrayerName;
     return `⏳ *${hours} jam ${minutes} menit* lagi menuju sholat *${translatedPrayerName}*`;
 }
+
 
 async function sendDailyVerse(sock, jid, isScheduled = false) {
     try {
