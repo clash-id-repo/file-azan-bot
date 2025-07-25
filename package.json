@@ -2,18 +2,19 @@
   "name": "bot2",
   "version": "1.0.0",
   "main": "bot.js",
-"scripts": {
-  "start": "node bot.js",
-  "test": "echo \"Error: no test specified\" && exit 1"
-},
+  "scripts": {
+    "start": "node bot.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [],
-  "author": "",
+  "author": "ARH - @arhverse",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.18",
     "axios": "^1.10.0",
     "chokidar": "^4.0.3",
+    "full-icu": "^1.5.0",
     "node-schedule": "^2.1.1",
     "qrcode-terminal": "^0.12.0"
   }
