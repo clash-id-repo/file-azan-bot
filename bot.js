@@ -803,11 +803,14 @@ async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
     const sock = makeWASocket({
-        logger: pino({ level: 'silent' }),
+        logger: pino({ level: 'info' }), // UBAH 'silent' menjadi 'info'
         auth: state,
         browser: ['ARHBot', 'Chrome', '18.3.0'],
-        syncFullHistory: false
+        syncFullHistory: false,
+        pairingCode: true // TAMBAHKAN baris ini
     });
+    
+    
 
     sock.ev.on('creds.update', saveCreds);
 
@@ -1353,13 +1356,8 @@ _${randomWish}_
     });
 
     sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect, qr } = update;
-        if (qr) {
-    // Tidak lagi mencoba menggambar, hanya mencetak link teksnya
-    console.log('QR Code diterima, silakan scan. Jika gambar tidak muncul, salin link di bawah ini ke browser Anda.');
-    qrcode.generate(qr, { small: true }); // Biarkan ini sebagai fallback
-    console.log(`[PENTING] Link QR Code: https://qr-code-generator.com/search.html?text=${encodeURIComponent(qr)}`);
-}
+        const { connection, lastDisconnect } = update; // Hapus 'qr' dari sini
+
 
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
