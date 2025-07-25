@@ -31,8 +31,8 @@ const userActivity = {};
 let blockedUsers = new Set();
 
 // --- INFORMASI PENTING & TEKS MENU ---
-const OWNER_NUMBER = '6287897261954'; // GANTI DENGAN NOMOR OWNER YANG BENAR
-const DONATION_IMAGE_URL = 'https://i.ibb.co/G3xSQWm0/IMG-20250720-034919-943.jpg'; // 
+const OWNER_NUMBER = process.env.OWNER_NUMBER || '6287897261954'; 
+const DONATION_IMAGE_URL = process.env.DONATION_IMAGE_URL || 'https://i.ibb.co/G3xSQWm0/IMG-20250720-034919-943.jpg';
 
 const PRAYER_NAMES_MAP = {
     Fajr: 'Subuh',
