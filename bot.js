@@ -812,9 +812,35 @@ async function connectToWhatsApp() {
         pairingCode: true // TAMBAHKAN baris ini
     });
     
+        // ... bagian sock = makeWASocket({...})
     
-
     sock.ev.on('creds.update', saveCreds);
+
+    // >>> TAMBAHKAN BLOK KODE DI BAWAH INI <<<
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect, qr } = update;
+
+        if(qr) {
+            console.log('------------------------------------------------');
+            console.log('       PAIRING CODE ANDA       ');
+            console.log(`          ${qr.slice(0, 4)} - ${qr.slice(4)}`);
+            console.log('------------------------------------------------');
+            console.log('Scan dengan WhatsApp di HP: Setelan > Perangkat Tertaut > Tautkan dengan nomor telepon.');
+        }
+
+        if(connection === 'close') {
+            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== 401; // 401 = Pairing Code Expired
+            console.log('Koneksi terputus karena:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
+            
+            if(shouldReconnect) {
+                connectToWhatsApp();
+            }
+        } else if(connection === 'open') {
+            console.log('✨ Koneksi berhasil tersambung!');
+        }
+    });
+    // >>> SAMPAI DI SINI <<<
+    
 
     sock.ev.on('group-participants.update', async (update) => {
         const { id, participants, action } = update;
