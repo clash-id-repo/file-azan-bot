@@ -32,7 +32,7 @@ let blockedUsers = new Set();
 
 // --- INFORMASI PENTING & TEKS MENU ---
 const OWNER_NUMBER = process.env.OWNER_NUMBER || '6287897261954'; 
-const DONATION_IMAGE_URL = process.env.DONATION_IMAGE_URL || 'https://i.ibb.co/G3xSQWm0/IMG-20250720-034919-943.jpg';
+const DONATION_IMAGE_URL = process.env.DONATION_IMAGE_URL || 'https://i.ibb.co/G3xSQWm0/IMG-20250720-034919-943.jpg'; 
 
 const PRAYER_NAMES_MAP = {
     Fajr: 'Subuh',
@@ -803,13 +803,11 @@ async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
     const sock = makeWASocket({
-        // Perubahan 1: Ubah 'silent' menjadi 'info' agar kode bisa muncul
-        logger: pino({ level: 'info' }), 
+        logger: pino({ level: 'silent' }),
         auth: state,
         browser: ['ARHBot', 'Chrome', '18.3.0'],
-        syncFullHistory: false,
+        syncFullHistory: false
     });
-
 
     sock.ev.on('creds.update', saveCreds);
 
@@ -1360,8 +1358,9 @@ _${randomWish}_
     // Tidak lagi mencoba menggambar, hanya mencetak link teksnya
     console.log('QR Code diterima, silakan scan. Jika gambar tidak muncul, salin link di bawah ini ke browser Anda.');
     qrcode.generate(qr, { small: true }); // Biarkan ini sebagai fallback
-    console.log([PENTING] Link QR Code: https://qr-code-generator.com/search.html?text=${encodeURIComponent(qr)});
+    console.log(`[PENTING] Link QR Code: https://qr-code-generator.com/search.html?text=${encodeURIComponent(qr)}`);
 }
+
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('Koneksi terputus:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
