@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "bot.js",
   "scripts": {
-  "start": "node --icu-data-dir=./node_modules/full-icu bot.js",
+  "start": "node bot.js",
   "test": "echo \"Error: no test specified\" && exit 1"
 },
   
@@ -15,7 +15,6 @@
     "@whiskeysockets/baileys": "^6.7.18",
     "axios": "^1.10.0",
     "chokidar": "^4.0.3",
-    "full-icu": "^1.5.0",
     "luxon": "^3.7.1",
     "node-schedule": "^2.1.1",
     "qrcode-terminal": "^0.12.0"
