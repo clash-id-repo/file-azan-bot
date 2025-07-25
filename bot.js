@@ -13,6 +13,7 @@ const schedule = require('node-schedule');
 // --- PENAMBAHAN UNTUK AUTO-RESTART ---
 const chokidar = require('chokidar');
 const { spawn } = require('child_process');
+const { DateTime } = require('luxon');
 const http = require('http'); // <-- Pastikan ini ada di atas
 
 
@@ -409,10 +410,15 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
     // Memilih satu doa secara acak
     const randomWish = dynamicWishes[Math.floor(Math.random() * dynamicWishes.length)];
 
-    const now = new Date();
-    const hour = now.getHours();
+    // =======================================================
+    // >>> PERUBAHAN LUXON DIMULAI DI SINI <<<
+    // =======================================================
+
+    // Membuat objek waktu yang SUDAH dikonversi ke zona WIB menggunakan Luxon
+    const nowInJakarta = DateTime.now().setZone('Asia/Jakarta');
+    const hour = nowInJakarta.hour; // Mengambil jam dari waktu WIB yang sudah benar
     
-    // 1. Menentukan sapaan berdasarkan waktu
+    // 1. Menentukan sapaan berdasarkan waktu (logika ini tidak berubah)
     let timeOfDayGreeting = "";
     let timeOfDayEmoji = "";
 
@@ -430,34 +436,27 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
         timeOfDayEmoji = "🌙";
     }
 
-    // 2. Membuat format tanggal lengkap
-    const fullDate = new Intl.DateTimeFormat('id-ID', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'Asia/Jakarta'
-    }).format(now);
+    // 2. Membuat format tanggal lengkap menggunakan Luxon
+    const fullDate = nowInJakarta.setLocale('id').toFormat('cccc, dd MMMM yyyy');
 
-    // 3. Menggabungkan sapaan pembuka
+    // 3. Menggabungkan sapaan pembuka (logika ini tidak berubah)
     const openingGreeting = isGroup
         ? `Assalamualaikum semuanya! ${timeOfDayGreeting} ${timeOfDayEmoji}`
         : `Assalamualaikum, *${userName}*! ${timeOfDayGreeting} ${timeOfDayEmoji}`;
     
-    // Menggunakan doa yang dipilih secara acak
     const openingWish = `Semoga di hari ${fullDate} ini, ${randomWish}`;
     const openingAction = "Berikut adalah daftar perintah yang bisa kamu gunakan:";
-
     const finalOpening = `${openingGreeting}\n\n${openingWish}\n\n${openingAction}`;
 
-    // 4. Menyiapkan info waktu server
-    const serverTime = new Intl.DateTimeFormat('id-ID', {
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-        timeZone: 'Asia/Jakarta', hour12: false
-    }).format(now);
+    // 4. Menyiapkan info waktu server menggunakan Luxon
+    const serverTime = nowInJakarta.toFormat('HH:mm:ss');
     const timeZoneString = `GMT+07:00 (WIB)`;
     
-    // 5. Mengembalikan seluruh teks menu
+    // =======================================================
+    // >>> PERUBAHAN LUXON SELESAI DI SINI <<<
+    // =======================================================
+    
+    // 5. Mengembalikan seluruh teks menu (bagian ini tidak berubah)
     return (
         `${finalOpening}\n\n` +
         "*📖 MENU UTAMA*\n" +
@@ -476,6 +475,7 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
         "> © MUADZIN BOT"
     );
 };
+
 
 
 // --- FUNGSI-FUNGSI UTILITAS ---
@@ -1311,69 +1311,72 @@ async function connectToWhatsApp() {
                             await sock.sendMessage(from, { sticker: { url: welcomeStickerPath } });
                         }
                         
-                        const now = new Date();
-    const hour = now.getHours();
-                        // 1. Menentukan sapaan berdasarkan waktu
-    let timeOfDayGreeting = "";
-    let timeOfDayEmoji = "";
+                                        
+                        
+                        // =======================================================
+                        // >>> PERUBAHAN LUXON DIMULAI DI SINI <<<
+                        // =======================================================
 
-    if (hour >= 4 && hour < 10) {
-        timeOfDayGreeting = "Selamat pagi";
-        timeOfDayEmoji = "☀️";
-    } else if (hour >= 10 && hour < 15) {
-        timeOfDayGreeting = "Selamat siang";
-        timeOfDayEmoji = "🌤️";
-    } else if (hour >= 15 && hour < 18) {
-        timeOfDayGreeting = "Selamat sore";
-        timeOfDayEmoji = "🌇";
-    } else {
-        timeOfDayGreeting = "Selamat malam";
-        timeOfDayEmoji = "🌙";
-    }
-    
-    const dynamicWishes = [
-  "Semoga Allah SWT selalu melimpahkan rahmat dan berkah-Nya di setiap langkahmu hari ini. 🤲",
-  "Semoga hari ini menjadi awal yang penuh kemudahan dan keberkahan dari Allah SWT. 🤲",
-  "Semoga Allah SWT mengisi pagimu dengan ketenangan dan hati yang penuh syukur. 🤲",
-  "Semoga Allah SWT melindungimu dari segala mara bahaya dan menjadikan harimu penuh kebaikan. 🤲",
-  "Semoga setiap doamu dikabulkan dan setiap usahamu diberi keberhasilan oleh Allah SWT. 🤲",
-  "Semoga Allah SWT memberimu kekuatan dan kesabaran dalam menjalani hari yang baru ini. 🤲",
-  "Semoga Allah SWT limpahkan kebahagiaan dan kedamaian dalam hatimu hari ini. 🤲",
-  "Semoga segala urusanmu hari ini dimudahkan dan diberkahi oleh Allah SWT. 🤲",
-  "Semoga cahaya iman dan taqwa menerangi langkahmu sepanjang hari ini. 🤲",
-  "Semoga Allah SWT mengampuni dosa-dosamu dan menerima amal ibadahmu hari ini. 🤲",
-  "Semoga hatimu selalu dipenuhi dengan rasa syukur dan cinta kepada Allah SWT. 🤲",
-  "Semoga Allah SWT jadikan pagimu ini sebagai awal kesuksesan dan kebahagiaan. 🤲",
-  "Semoga setiap nafas yang kau hirup hari ini membawa berkah dan rahmat Allah SWT. 🤲",
-  "Semoga Allah SWT menuntunmu pada jalan yang lurus dan penuh keberkahan. 🤲",
-  "Semoga harimu dipenuhi dengan kebaikan yang mengalir dari rahmat Allah SWT. 🤲",
-  "Semoga Allah SWT bukakan pintu rezeki yang halal dan berkah untukmu hari ini. 🤲",
-  "Semoga setiap langkahmu hari ini mendapat ridha dan kasih sayang Allah SWT. 🤲",
-  "Semoga Allah SWT jauhkanmu dari segala kesulitan dan ujian yang berat hari ini. 🤲",
-  "Semoga Allah SWT jadikan pagimu penuh dengan dzikir dan pengingat kebaikan. 🤲",
-  "Semoga keberkahan dan ampunan Allah SWT selalu menyertai setiap aktivitasmu hari ini. 🤲"
-];
+                        // Menggunakan Luxon untuk mendapatkan waktu WIB yang akurat
+                        const nowInJakarta = DateTime.now().setZone('Asia/Jakarta');
+                        const hour = nowInJakarta.hour;
 
-// Memilih satu doa secara acak
-const randomWish = dynamicWishes[Math.floor(Math.random() * dynamicWishes.length)];
+                        // 1. Menentukan sapaan berdasarkan waktu (logika ini tidak berubah)
+                        let timeOfDayGreeting = "";
+                        let timeOfDayEmoji = "";
 
-                        const welcomeMessageText = `Ahlan wa Sahlan *${userName}*! ${timeOfDayGreeting} ${timeOfDayEmoji}
+                        if (hour >= 4 && hour < 10) {
+                            timeOfDayGreeting = "Selamat pagi";
+                            timeOfDayEmoji = "☀️";
+                        } else if (hour >= 10 && hour < 15) {
+                            timeOfDayGreeting = "Selamat siang";
+                            timeOfDayEmoji = "🌤️";
+                        } else if (hour >= 15 && hour < 18) {
+                            timeOfDayGreeting = "Selamat sore";
+                            timeOfDayEmoji = "🌇";
+                        } else {
+                            timeOfDayGreeting = "Selamat malam";
+                            timeOfDayEmoji = "🌙";
+                        }
+                        
+                        // Memilih satu doa secara acak (logika ini tidak berubah)
+                        const dynamicWishes = [
+                            "Semoga Allah SWT selalu melimpahkan rahmat dan berkah-Nya di setiap langkahmu hari ini. 🤲",
+                            "Semoga hari ini menjadi awal yang penuh kemudahan dan keberkahan dari Allah SWT. 🤲",
+                            "Semoga Allah SWT mengisi pagimu dengan ketenangan dan hati yang penuh syukur. 🤲",
+                            "Semoga Allah SWT melindungimu dari segala mara bahaya dan menjadikan harimu penuh kebaikan. 🤲",
+                            "Semoga setiap doamu dikabulkan dan setiap usahamu diberi keberhasilan oleh Allah SWT. 🤲",
+                            "Semoga Allah SWT memberimu kekuatan dan kesabaran dalam menjalani hari yang baru ini. 🤲",
+                            "Semoga Allah SWT limpahkan kebahagiaan dan kedamaian dalam hatimu hari ini. 🤲",
+                            "Semoga segala urusanmu hari ini dimudahkan dan diberkahi oleh Allah SWT. 🤲",
+                            "Semoga cahaya iman dan taqwa menerangi langkahmu sepanjang hari ini. 🤲",
+                            "Semoga Allah SWT mengampuni dosa-dosamu dan menerima amal ibadahmu hari ini. 🤲",
+                            "Semoga hatimu selalu dipenuhi dengan rasa syukur dan cinta kepada Allah SWT. 🤲",
+                            "Semoga Allah SWT jadikan pagimu ini sebagai awal kesuksesan dan kebahagiaan. 🤲",
+                            "Semoga setiap nafas yang kau hirup hari ini membawa berkah dan rahmat Allah SWT. 🤲",
+                            "Semoga Allah SWT menuntunmu pada jalan yang lurus dan penuh keberkahan. 🤲",
+                            "Semoga harimu dipenuhi dengan kebaikan yang mengalir dari rahmat Allah SWT. 🤲",
+                            "Semoga Allah SWT bukakan pintu rezeki yang halal dan berkah untukmu hari ini. 🤲",
+                            "Semoga setiap langkahmu hari ini mendapat ridha dan kasih sayang Allah SWT. 🤲",
+                            "Semoga Allah SWT jauhkanmu dari segala kesulitan dan ujian yang berat hari ini. 🤲",
+                            "Semoga Allah SWT jadikan pagimu penuh dengan dzikir dan pengingat kebaikan. 🤲",
+                            "Semoga keberkahan dan ampunan Allah SWT selalu menyertai setiap aktivitasmu hari ini. 🤲"
+                        ];
+                        const randomWish = dynamicWishes[Math.floor(Math.random() * dynamicWishes.length)];
 
-Aku Muadzin Bot, asisten pengingat waktu sholat mu ✨
-
-Untuk memulai, silakan gunakan salah satu perintah berikut:  
-- \`/menu\` - untuk melihat semua fitur yang bisa kamu gunakan  
-- \`/panduan\` - jika kamu memerlukan bantuan atau penjelasan
-
-_${randomWish}_
-
-> © MUADZIN BOT`
-;
+                        // Menyusun pesan selamat datang (logika ini tidak berubah)
+                        const welcomeMessageText = `Ahlan wa Sahlan *${userName}*! ${timeOfDayGreeting} ${timeOfDayEmoji}\n\nAku Muadzin Bot, asisten pengingat waktu sholat mu ✨\n\nUntuk memulai, silakan gunakan salah satu perintah berikut:  \n- \`/menu\` - untuk melihat semua fitur yang bisa kamu gunakan  \n- \`/panduan\` - jika kamu memerlukan bantuan atau penjelasan\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
+                        
                         await sock.sendMessage(from, { 
                             text: welcomeMessageText,
                         });
+
+                        // =======================================================
+                        // >>> PERUBAHAN LUXON SELESAI DI SINI <<<
+                        // =======================================================
                     }
                     break;
+
             }
 
         } catch (error) {
