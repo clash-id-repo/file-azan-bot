@@ -808,8 +808,6 @@ async function connectToWhatsApp() {
         auth: state,
         browser: ['ARHBot', 'Chrome', '18.3.0'],
         syncFullHistory: false,
-        // Perubahan 2: Tambahkan baris ini untuk meminta pairing code
-        pairingCode: true
     });
 
 
@@ -1357,18 +1355,19 @@ _${randomWish}_
     });
 
     sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect } = update;
-        
+        const { connection, lastDisconnect, qr } = update;
+        if (qr) {
+    // Tidak lagi mencoba menggambar, hanya mencetak link teksnya
+    console.log('QR Code diterima, silakan scan. Jika gambar tidak muncul, salin link di bawah ini ke browser Anda.');
+    qrcode.generate(qr, { small: true }); // Biarkan ini sebagai fallback
+    console.log([PENTING] Link QR Code: https://qr-code-generator.com/search.html?text=${encodeURIComponent(qr)});
+}
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('Koneksi terputus:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
-            if (shouldReconnect) {
-                connectToWhatsApp();
-            }
+            if (shouldReconnect) connectToWhatsApp();
         } else if (connection === 'open') {
             console.log('Berhasil terhubung ke WhatsApp! Bot siap digunakan.');
-            
-            // Mengatur semua jadwal setelah koneksi berhasil
             for (const jid in subscribers) {
                 const subscriberData = subscribers[jid];
                 await scheduleRemindersForUser(sock, jid, subscriberData.city, subscriberData.name || 'Kawan');
