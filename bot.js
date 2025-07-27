@@ -235,7 +235,7 @@ const KOTA_VALID = new Set([
 ]);
 
 
-const KOTA_LIST_TEXT = 📁 *DAFTAR LENGKAP KOTA & KABUPATEN DI INDONESIA*
+const KOTA_LIST_TEXT = `📁 *DAFTAR LENGKAP KOTA & KABUPATEN DI INDONESIA*
 
 Gunakan nama kota atau kabupaten dari daftar di bawah ini untuk hasil yang akurat.
 
@@ -292,7 +292,7 @@ Gunakan nama kota atau kabupaten dari daftar di bawah ini untuk hasil yang akura
 ℹ️ *Catatan:* Kamu bebas mencoba nama daerah lainnya, termasuk kecamatan atau kabupaten kecil.
 
 
-> © MUADZIN BOT;
+> © MUADZIN BOT`;
 
 
 
