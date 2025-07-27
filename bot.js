@@ -282,9 +282,6 @@ const DOA_HARIAN = [
     "Al-Kahfi di hari Jumat adalah cahaya di antara dua Jumat. Jangan lupa membacanya atau mendengarkannya nanti ya. ✨"
 ];
 
-// --- TEKS-TEKS ---
-const KOTA_LIST_TEXT = `ℹ️ Untuk melihat jadwal sholat, silakan ketik nama kota atau kabupaten di Indonesia secara langsung.\n\nContoh: \`/jadwal Jakarta\` atau \`/jadwal Bandung\``;
-
 const DZIKIR_PAGI_TEXT = `*☀️ WAKTUNYA DZIKIR PAGI*
 
 *ِبِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ*
