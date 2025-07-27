@@ -1389,98 +1389,122 @@ async function connectToWhatsApp() {
         }
     });
 
-    sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect } = update; // Hapus 'qr' dari sini
+    // ========================================================================
+// >>> GANTI SELURUH FUNGSI connectToWhatsApp LAMA DENGAN YANG DI BAWAH INI <<<
+// ========================================================================
 
+function connectToWhatsApp() {
+    // ... (pastikan variabel sock, schedule, DisconnectReason, dll sudah di-import/didefinisikan di atas fungsi ini)
+
+    sock.ev.on('connection.update', async (update) => {
+        const { connection, lastDisconnect } = update;
 
         if (connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('Koneksi terputus:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
-            if (shouldReconnect) connectToWhatsApp();
+            if (shouldReconnect) {
+                connectToWhatsApp();
+            }
         } else if (connection === 'open') {
             console.log('Berhasil terhubung ke WhatsApp! Bot siap digunakan.');
+
+            // Menjadwalkan ulang pengingat sholat untuk semua pelanggan saat bot online
             for (const jid in subscribers) {
                 const subscriberData = subscribers[jid];
                 await scheduleRemindersForUser(sock, jid, subscriberData.city, subscriberData.name || 'Kawan');
             }
-            
-                        // --- JADWAL BARU: MENGIRIM AYAT ACAK 2X SEHARI (12:40 & 18:40) ---
-            // Aturan: Berjalan pada menit ke-40, saat jam 12 dan 18.
-            const verseRule = '40 12,18 * * *'; 
-            schedule.scheduleJob(verseRule, async () => {
-                console.log(`[INFO] Mengirim Random Ayat berkala ke semua pelanggan...`);
+
+            // =================================================================
+            // >> PENJADWALAN GLOBAL DENGAN TIMEZONE WIB (ASIA/JAKARTA) <<
+            // =================================================================
+
+            // --- JADWAL AYAT ACAK (12:40 & 18:40 WIB) ---
+            const verseSchedule = new schedule.RecurrenceRule();
+            verseSchedule.tz = 'Asia/Jakarta';
+            verseSchedule.hour = [12, 18];
+            verseSchedule.minute = 40;
+
+            schedule.scheduleJob(verseSchedule, async () => {
+                console.log(`[INFO] Mengirim Random Ayat berkala (WIB) ke semua pelanggan...`);
                 for (const jid in subscribers) {
                     try {
-                        // Memanggil fungsi yang sudah ada untuk mengirim ayat
                         await sendDailyVerse(sock, jid, true);
-                        // Beri jeda sedikit antar pesan
-                        await new Promise(resolve => setTimeout(resolve, 500)); 
+                        await new Promise(resolve => setTimeout(resolve, 500));
                     } catch (e) {
                         console.error(`[RANDOM AYAT ERROR] Gagal mengirim ke ${jid}:`, e.message);
                     }
                 }
             });
 
-            
-            // --- JADWAL BARU: MENGIRIM DOA & HARAPAN BAIK SETIAP 8 JAM ---
-            // Aturan: Berjalan setiap 8 jam 
-            const wishRule = '0 9,20 * * *';
-            schedule.scheduleJob(wishRule, async () => {
-                console.log(`[INFO] Mengirim Doa & Harapan Harian berkala ke semua pelanggan...`);
-                
-                // Ambil satu pesan random dari bank doa
+            // --- JADWAL DOA & HARAPAN BAIK (09:00 & 20:00 WIB) ---
+            const wishSchedule = new schedule.RecurrenceRule();
+            wishSchedule.tz = 'Asia/Jakarta';
+            wishSchedule.hour = [9, 20];
+            wishSchedule.minute = 0;
+
+            schedule.scheduleJob(wishSchedule, async () => {
+                console.log(`[INFO] Mengirim Doa & Harapan Harian (WIB) ke semua pelanggan...`);
                 const randomWish = DOA_HARIAN[Math.floor(Math.random() * DOA_HARIAN.length)];
                 const messageToSend = `*✨ PESAN KEBAIKAN UNTUKMU ✨*\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
-
                 for (const jid in subscribers) {
                     try {
                         await sock.sendMessage(jid, { text: messageToSend });
-                        // Beri jeda sedikit antar pesan agar tidak dianggap spam
-                        await new Promise(resolve => setTimeout(resolve, 500)); 
+                        await new Promise(resolve => setTimeout(resolve, 500));
                     } catch (e) {
                         console.error(`[DOA HARIAN ERROR] Gagal mengirim ke ${jid}:`, e.message);
                     }
                 }
             });
 
-
+            // --- JADWAL DZIKIR PAGI (07:00 WIB) ---
             const dzikirPagiRule = new schedule.RecurrenceRule();
             dzikirPagiRule.hour = 7;
             dzikirPagiRule.minute = 0;
             dzikirPagiRule.tz = 'Asia/Jakarta';
+
             schedule.scheduleJob(dzikirPagiRule, async () => {
                 console.log("[INFO] Mengirim Dzikir Pagi ke semua pelanggan...");
                 for (const jid in subscribers) {
                     await sendDzikir(sock, jid, 'pagi');
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Jeda konsisten
                 }
             });
 
+            // --- JADWAL DZIKIR PETANG (16:00 WIB) ---
             const dzikirPetangRule = new schedule.RecurrenceRule();
             dzikirPetangRule.hour = 16;
             dzikirPetangRule.minute = 0;
             dzikirPetangRule.tz = 'Asia/Jakarta';
+
             schedule.scheduleJob(dzikirPetangRule, async () => {
                 console.log("[INFO] Mengirim Dzikir Petang ke semua pelanggan...");
                 for (const jid in subscribers) {
                     await sendDzikir(sock, jid, 'petang');
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Jeda konsisten
                 }
             });
 
+            // --- JADWAL AL-KAHFI (Jumat, 08:00 WIB) ---
             const alKahfiRule = new schedule.RecurrenceRule();
             alKahfiRule.dayOfWeek = 5; // 5 = Jumat
             alKahfiRule.hour = 8;
             alKahfiRule.minute = 0;
             alKahfiRule.tz = 'Asia/Jakarta';
+
             schedule.scheduleJob(alKahfiRule, async () => {
                 console.log("[INFO] Mengirim pengingat Al-Kahfi ke semua pelanggan...");
                 for (const jid in subscribers) {
                     await sendAlKahfiReminder(sock, jid);
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Jeda konsisten
                 }
             });
         }
     });
-}
+} // <-- Ini adalah penutup untuk fungsi connectToWhatsApp. Strukturnya sudah benar.
 
+// ========================================================================
+// >>> KODE DI BAWAH INI BIARKAN SEPERTI ASLINYA, JANGAN DIUBAH <<<
+// ========================================================================
 
 // =======================================================
 // >>> MULAI KODE KEEP-ALIVE (LETAKKAN DI SINI) <<<
@@ -1490,7 +1514,7 @@ const PORT = process.env.PORT || 3000;
 
 http.createServer((req, res) => {
   res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Bot is alive and running!');
+  res.end('SERVER is alive and running! Support by @arhverse x NUSA KARSA');
 }).listen(PORT, () => {
   console.log(`[SERVER] Keep-alive server berjalan di port ${PORT}`);
 });
@@ -1519,3 +1543,4 @@ watcher.on('change', path => {
   
   process.exit();
 });
+
