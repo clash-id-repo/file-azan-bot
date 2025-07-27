@@ -331,9 +331,7 @@ maka tidak ada sesuatu pun yang akan membahayakannya hingga ia pergi dari tempat
 Semoga kita semua selalu dalam lindungan-Nya. 🙏\n\n> © MUADZIN BOT`;
 
 
-const PANDUAN_TEXT = `📖 *PANDUAN PENGGUNAAN MUADZIN BOT* 
-
-1️⃣ *Melihat Jadwal Sholat*
+const PANDUAN_TEXT = `📖 *PANDUAN PENGGUNAAN MUADZIN BOT* 1️⃣ *Melihat Jadwal Sholat*
 Ketik \`/jadwal\` untuk melihat jadwal sholat di kota yang telah kamu atur.
 Untuk melihat jadwal di kota lain, ketik \`/jadwal Nama Kota\`.
 > Contoh: \`/jadwal Pekanbaru\`
@@ -358,17 +356,13 @@ Gunakan perintah \`/infobot\`, \`/kota\`, \`/donasi\`, atau \`/owner\` untuk inf
 💫 *SUKA BOT INI?*
 Silakan share bot ini kesemua kenalan kamu agar mendapatkan manfaatnya juga dan Dukung bot ini dengan berdonasi melalui perintah \`/donasi\`.\n\n> © MUADZIN BOT`;
 
-const DONASI_TEXT = `💝 *DUKUNG MUADZIN BOT* 
-
-Terima kasih sudah berdonasi untuk mendukung bot ini! Setiap dukungan darimu sangat berarti agar bot bisa terus aktif dan dikembangkan dengan fitur-fitur baru.
+const DONASI_TEXT = `💝 *DUKUNG MUADZIN BOT* Terima kasih sudah berdonasi untuk mendukung bot ini! Setiap dukungan darimu sangat berarti agar bot bisa terus aktif dan dikembangkan dengan fitur-fitur baru.
 
 Kamu bisa memberikan donasi melalui QRIS di atas dengan menggunakan dompet digital atau Mobile Banking yang kamu miliki.
 
 Terima kasih banyak atas kebaikanmu, semoga Allah SWT SWT melipat gandakan rezekimu! ✨\n\n> © MUADZIN BOT`;
 
-const OWNER_TEXT = `👨‍💻 *INFORMASI OWNER* 
-
-Bot ini dibuat dan dikelola oleh ARH [@arhverse] x NUSA KARSA [nusakarsa.id]. Jika kamu menemukan bug, punya saran, atau butuh bantuan, silakan hubungi owner.
+const OWNER_TEXT = `👨‍💻 *INFORMASI OWNER* Bot ini dibuat dan dikelola oleh ARH [@arhverse] x NUSA KARSA [nusakarsa.id]. Jika kamu menemukan bug, punya saran, atau butuh bantuan, silakan hubungi owner.
 
 💬 *WhatsApp:* wa.me/${OWNER_NUMBER}
 
@@ -410,15 +404,10 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
     // Memilih satu doa secara acak
     const randomWish = dynamicWishes[Math.floor(Math.random() * dynamicWishes.length)];
 
-    // =======================================================
-    // >>> PERUBAHAN LUXON DIMULAI DI SINI <<<
-    // =======================================================
-
-    // Membuat objek waktu yang SUDAH dikonversi ke zona WIB menggunakan Luxon
+    // Menggunakan Luxon untuk mendapatkan waktu di zona WIB
     const nowInJakarta = DateTime.now().setZone('Asia/Jakarta');
-    const hour = nowInJakarta.hour; // Mengambil jam dari waktu WIB yang sudah benar
+    const hour = nowInJakarta.hour; 
     
-    // 1. Menentukan sapaan berdasarkan waktu (logika ini tidak berubah)
     let timeOfDayGreeting = "";
     let timeOfDayEmoji = "";
 
@@ -436,10 +425,8 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
         timeOfDayEmoji = "🌙";
     }
 
-    // 2. Membuat format tanggal lengkap menggunakan Luxon
     const fullDate = nowInJakarta.setLocale('id').toFormat('cccc, dd MMMM yyyy');
-
-    // 3. Menggabungkan sapaan pembuka (logika ini tidak berubah)
+    
     const openingGreeting = isGroup
         ? `Assalamualaikum semuanya! ${timeOfDayGreeting} ${timeOfDayEmoji}`
         : `Assalamualaikum, *${userName}*! ${timeOfDayGreeting} ${timeOfDayEmoji}`;
@@ -448,15 +435,9 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
     const openingAction = "Berikut adalah daftar perintah yang bisa kamu gunakan:";
     const finalOpening = `${openingGreeting}\n\n${openingWish}\n\n${openingAction}`;
 
-    // 4. Menyiapkan info waktu server menggunakan Luxon
     const serverTime = nowInJakarta.toFormat('HH:mm:ss');
     const timeZoneString = `GMT+07:00 (WIB)`;
     
-    // =======================================================
-    // >>> PERUBAHAN LUXON SELESAI DI SINI <<<
-    // =======================================================
-    
-    // 5. Mengembalikan seluruh teks menu (bagian ini tidak berubah)
     return (
         `${finalOpening}\n\n` +
         "*📖 MENU UTAMA*\n" +
@@ -514,34 +495,26 @@ async function fetchPrayerTimes(city, date = new Date()) {
             }
         });
         
-        // --- VALIDASI KETAT DIMULAI DI SINI ---
-
-        // Cek 1: Pastikan API memberikan respons sukses.
         if (!response.data || response.data.code !== 200) {
             console.log(`[VALIDASI GAGAL] API tidak merespons dengan baik untuk kota: ${city}`);
             return null; 
         }
 
-        // Cek 2: Pastikan ada objek 'data' dan 'meta' di dalam respons.
         const responseData = response.data.data;
         if (!responseData || !responseData.meta || !responseData.timings) {
             console.log(`[VALIDASI GAGAL] Respons API tidak lengkap untuk kota: ${city}`);
             return null;
         }
 
-        // Cek 3: Pastikan zona waktu adalah zona waktu valid di Indonesia.
         const validTimezones = ['Asia/Jakarta', 'Asia/Pontianak', 'Asia/Makassar', 'Asia/Jayapura'];
         if (!validTimezones.includes(responseData.meta.timezone)) {
             console.log(`[VALIDASI GAGAL] Zona waktu tidak valid (${responseData.meta.timezone}) untuk kota: ${city}`);
             return null;
         }
 
-        // Jika semua Cek lolos, kota dianggap valid.
         return responseData;
 
     } catch (error) {
-        // Jika API mengembalikan error (misal: 404 Not Found untuk kota aneh),
-        // blok ini akan menangkapnya dan mengembalikan null.
         console.log(`[API ERROR] Panggilan API gagal untuk kota: "${city}". Pesan: ${error.message}`);
         return null;
     }
@@ -561,7 +534,6 @@ function formatUptime(startTime) {
 
 
 function calculateCountdown(timings) {
-    // Menggunakan Luxon untuk mendapatkan waktu saat ini di zona WIB
     const nowInJakarta = DateTime.now().setZone('Asia/Jakarta');
     const prayerOrder = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     let nextPrayerName = null;
@@ -572,10 +544,8 @@ function calculateCountdown(timings) {
         if (!prayerTimeStr) continue;
 
         const [hour, minute] = prayerTimeStr.split(':');
-        // Membuat objek waktu sholat di zona WIB juga
         let prayerDateTime = nowInJakarta.set({ hour: parseInt(hour), minute: parseInt(minute), second: 0, millisecond: 0 });
 
-        // Perbandingan sekarang akurat karena keduanya dalam zona waktu yang sama
         if (prayerDateTime > nowInJakarta) {
             nextPrayerName = prayerName;
             nextPrayerTime = prayerDateTime;
@@ -583,14 +553,12 @@ function calculateCountdown(timings) {
         }
     }
 
-    // Jika sudah melewati Isya, sholat berikutnya adalah Subuh besok
     if (!nextPrayerName) {
         nextPrayerName = 'Fajr';
         const [hour, minute] = timings.Fajr.split(':');
         nextPrayerTime = nowInJakarta.plus({ days: 1 }).set({ hour: parseInt(hour), minute: parseInt(minute), second: 0, millisecond: 0 });
     }
 
-    // Menggunakan Luxon untuk menghitung selisih waktu
     const diff = nextPrayerTime.diff(nowInJakarta, ['hours', 'minutes']).toObject();
     const hours = Math.floor(diff.hours);
     const minutes = Math.floor(diff.minutes);
@@ -607,30 +575,26 @@ async function sendDailyVerse(sock, jid, isScheduled = false) {
         }
         const randomAyat = Math.floor(Math.random() * 6236) + 1;
         
-        // PERUBAHAN 1: Menambahkan 'en.transliteration' ke dalam panggilan API
         const response = await axios.get(`https://api.alquran.cloud/v1/ayah/${randomAyat}/editions/quran-uthmani,id.indonesian,ar.alafasy,en.transliteration`);
         const data = response.data.data;
 
-        // Mengambil semua data yang kita butuhkan
         const arabicData = data.find(d => d.edition.identifier === 'quran-uthmani');
         const indonesianData = data.find(d => d.edition.identifier === 'id.indonesian');
         const audioData = data.find(d => d.edition.identifier === 'ar.alafasy');
         const transliterationData = data.find(d => d.edition.identifier === 'en.transliteration');
 
-        // Memastikan semua data berhasil didapatkan
         if (!arabicData || !indonesianData || !audioData || !transliterationData) {
              throw new Error("Data dari API tidak lengkap (mungkin transliterasi gagal didapat).");
         }
 
         const arabicText = arabicData.text;
         const translationText = indonesianData.text;
-        const transliterationText = transliterationData.text; // Data baru
+        const transliterationText = transliterationData.text;
         const surahName = arabicData.surah.name;
         const surahNumber = arabicData.surah.number;
         const ayatNumber = arabicData.numberInSurah;
         const audioUrl = audioData.audio;
 
-        // PERUBAHAN 2: Menyusun ulang format pesan untuk menyertakan teks Latin
         const message = `*✨ AYAT AL-QUR'AN UNTUKMU HARI INI*\n\n` +
                         `*${surahName} (${surahNumber}:${ayatNumber})*\n\n` +
                         `*${arabicText}*\n\n` +
@@ -665,27 +629,23 @@ async function sendAlKahfiReminder(sock, jid) {
         const surah = 18;
         const ayat = Math.floor(Math.random() * 110) + 1; 
         
-        // PERUBAHAN 1: Menambahkan 'en.transliteration' ke dalam panggilan API
         const response = await axios.get(`https://api.alquran.cloud/v1/ayah/${surah}:${ayat}/editions/quran-uthmani,id.indonesian,ar.alafasy,en.transliteration`);
         const data = response.data.data;
 
-        // Mengambil semua data yang kita butuhkan
         const arabicData = data.find(d => d.edition.identifier === 'quran-uthmani');
         const indonesianData = data.find(d => d.edition.identifier === 'id.indonesian');
         const audioData = data.find(d => d.edition.identifier === 'ar.alafasy');
         const transliterationData = data.find(d => d.edition.identifier === 'en.transliteration');
 
-        // Memastikan semua data berhasil didapatkan
         if (!arabicData || !indonesianData || !audioData || !transliterationData) {
              throw new Error("Data Al-Kahfi dari API tidak lengkap.");
         }
 
         const arabicText = arabicData.text;
         const translationText = indonesianData.text;
-        const transliterationText = transliterationData.text; // Data baru
+        const transliterationText = transliterationData.text; 
         const audioUrl = audioData.audio;
 
-        // PERUBAHAN 2: Menyusun ulang format pesan untuk menyertakan teks Latin
         const message = `*✨ JUM'AT MUBARAK - WAKTUNYA AL-KAHFI*\n\n` +
                         `_Dari Abu Sa’id Al-Khudri radhiyallahu ‘anhu, Nabi shallallahu ‘alaihi wa sallam bersabda:_\n` +
                         `_"Barangsiapa membaca surat Al-Kahfi pada hari Jum’at, maka ia akan disinari oleh cahaya di antara dua Jum’at."_\n\n` +
@@ -808,18 +768,15 @@ async function connectToWhatsApp() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
     const sock = makeWASocket({
-        logger: pino({ level: 'info' }), // UBAH 'silent' menjadi 'info'
+        logger: pino({ level: 'info' }),
         auth: state,
         browser: ['ARHBot', 'Chrome', '18.3.0'],
         syncFullHistory: false,
-        pairingCode: true // TAMBAHKAN baris ini
+        pairingCode: true
     });
-    
-        // ... bagian sock = makeWASocket({...})
     
     sock.ev.on('creds.update', saveCreds);
 
-    // >>> TAMBAHKAN BLOK KODE DI BAWAH INI <<<
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
 
@@ -832,7 +789,7 @@ async function connectToWhatsApp() {
         }
 
         if(connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== 401; // 401 = Pairing Code Expired
+            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('Koneksi terputus karena:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
             
             if(shouldReconnect) {
@@ -840,10 +797,85 @@ async function connectToWhatsApp() {
             }
         } else if(connection === 'open') {
             console.log('✨ Koneksi berhasil tersambung!');
+            // Menjadwalkan ulang pengingat sholat untuk semua pelanggan saat bot online
+            for (const jid in subscribers) {
+                const subscriberData = subscribers[jid];
+                scheduleRemindersForUser(sock, jid, subscriberData.city, subscriberData.name || 'Kawan');
+            }
+
+            // --- Penjadwalan Global ---
+            const verseSchedule = new schedule.RecurrenceRule();
+            verseSchedule.tz = 'Asia/Jakarta';
+            verseSchedule.hour = [12, 18];
+            verseSchedule.minute = 40;
+            schedule.scheduleJob(verseSchedule, async () => {
+                console.log(`[INFO] Mengirim Random Ayat berkala (WIB) ke semua pelanggan...`);
+                for (const jid in subscribers) {
+                    try {
+                        await sendDailyVerse(sock, jid, true);
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (e) {
+                        console.error(`[RANDOM AYAT ERROR] Gagal mengirim ke ${jid}:`, e.message);
+                    }
+                }
+            });
+
+            const wishSchedule = new schedule.RecurrenceRule();
+            wishSchedule.tz = 'Asia/Jakarta';
+            wishSchedule.hour = [9, 20];
+            wishSchedule.minute = 0;
+            schedule.scheduleJob(wishSchedule, async () => {
+                console.log(`[INFO] Mengirim Doa & Harapan Harian (WIB) ke semua pelanggan...`);
+                const randomWish = DOA_HARIAN[Math.floor(Math.random() * DOA_HARIAN.length)];
+                const messageToSend = `*✨ PESAN KEBAIKAN UNTUKMU ✨*\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
+                for (const jid in subscribers) {
+                    try {
+                        await sock.sendMessage(jid, { text: messageToSend });
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (e) {
+                        console.error(`[DOA HARIAN ERROR] Gagal mengirim ke ${jid}:`, e.message);
+                    }
+                }
+            });
+
+            const dzikirPagiRule = new schedule.RecurrenceRule();
+            dzikirPagiRule.hour = 7;
+            dzikirPagiRule.minute = 0;
+            dzikirPagiRule.tz = 'Asia/Jakarta';
+            schedule.scheduleJob(dzikirPagiRule, async () => {
+                console.log("[INFO] Mengirim Dzikir Pagi ke semua pelanggan...");
+                for (const jid in subscribers) {
+                    await sendDzikir(sock, jid, 'pagi');
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            });
+
+            const dzikirPetangRule = new schedule.RecurrenceRule();
+            dzikirPetangRule.hour = 16;
+            dzikirPetangRule.minute = 0;
+            dzikirPetangRule.tz = 'Asia/Jakarta';
+            schedule.scheduleJob(dzikirPetangRule, async () => {
+                console.log("[INFO] Mengirim Dzikir Petang ke semua pelanggan...");
+                for (const jid in subscribers) {
+                    await sendDzikir(sock, jid, 'petang');
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            });
+
+            const alKahfiRule = new schedule.RecurrenceRule();
+            alKahfiRule.dayOfWeek = 5; // 5 = Jumat
+            alKahfiRule.hour = 8;
+            alKahfiRule.minute = 0;
+            alKahfiRule.tz = 'Asia/Jakarta';
+            schedule.scheduleJob(alKahfiRule, async () => {
+                console.log("[INFO] Mengirim pengingat Al-Kahfi ke semua pelanggan...");
+                for (const jid in subscribers) {
+                    await sendAlKahfiReminder(sock, jid);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            });
         }
     });
-    // >>> SAMPAI DI SINI <<<
-    
 
     sock.ev.on('group-participants.update', async (update) => {
         const { id, participants, action } = update;
@@ -864,7 +896,6 @@ async function connectToWhatsApp() {
         }
     });
     
-
     sock.ev.on('messages.upsert', async m => {
         const msg = m.messages[0];
         
@@ -898,41 +929,33 @@ async function connectToWhatsApp() {
             const isGroup = isJidGroup(from);
             const userName = msg.pushName || "Kawan";
 
-                        // --- PENANGANAN STATE INTERAKTIF ---
+            // --- PENANGANAN STATE INTERAKTIF ---
             if (userState[from]) {
                 const state = userState[from];
-                const userInput = body.trim(); // Contoh input: "kota pekanbaru"
+                const userInput = body.trim();
 
-                // --- TAHAP 1: SANITASI INPUT KOTA ---
-                let sanitizedCity = userInput.toLowerCase(); // -> "kota pekanbaru"
+                let sanitizedCity = userInput.toLowerCase();
                 const prefixesToRemove = ['kota ', 'kabupaten ', 'kab ', 'kotamadya ', 'kota adm. '];
                 
                 for (const prefix of prefixesToRemove) {
                     if (sanitizedCity.startsWith(prefix)) {
-                        sanitizedCity = sanitizedCity.replace(prefix, '').trim(); // -> "pekanbaru"
+                        sanitizedCity = sanitizedCity.replace(prefix, '').trim();
                         break;
                     }
                 }
-                // --- AKHIR TAHAP SANITASI ---
 
-                // Cek jika pengguna mengetik perintah '/kota'
                 if (sanitizedCity === '/kota') {
                     await sock.sendMessage(from, { text: KOTA_LIST_TEXT });
                     return; 
                 }
                 
-                // --- TAHAP 2: VALIDASI TERHADAP BANK KOTA ---
                 if (!KOTA_VALID.has(sanitizedCity)) {
                     const fallbackMessage = `Maaf, kota *"${userInput}"* tidak kami kenali atau tidak ada dalam daftar di server kami 😔\n\nPastikan ejaan sudah benar dan merupakan kota/kabupaten di Indonesia.\n\nKetik \`/kota\` untuk melihat beberapa contoh kota yang didukung.\n\n> © MUADZIN BOT`;
                     await sock.sendMessage(from, { text: fallbackMessage });
                     return; 
                 }
-                // --- AKHIR TAHAP VALIDASI ---
 
-                // --- TAHAP 3: FORMATTING NAMA KOTA ---
-                // Mengubah "pekanbaru" menjadi "Pekanbaru"
                 const finalCityName = sanitizedCity.charAt(0).toUpperCase() + sanitizedCity.slice(1);
-                // --- AKHIR TAHAP FORMATTING ---
 
                 await sock.sendMessage(from, { text: `Mencari data untuk *${finalCityName}*...` });
                 const validCityData = await fetchPrayerTimes(finalCityName);
@@ -940,7 +963,6 @@ async function connectToWhatsApp() {
                 if (validCityData) {
                     const subscriberName = isGroup ? (await sock.groupMetadata(from)).subject : userName;
                     
-                    // SIMPAN NAMA KOTA YANG SUDAH BERSIH DAN DIFORMAT
                     subscribers[from] = { city: finalCityName, name: subscriberName };
                     saveData(SUBSCRIBERS_FILE, subscribers);
                     
@@ -948,7 +970,6 @@ async function connectToWhatsApp() {
                         const successMessage = `✅ Alhamdulillah, langganan pengingat berhasil diaktifkan!\n\n${isGroup ? 'Grup ini' : 'Kamu'} akan menerima pengingat waktu sholat untuk wilayah *${finalCityName}*.\n\nSenang sekali bisa menjadi teman pengingat sholatmu, semoga niat baikmu untuk sholat tepat waktu ini dicatat sebagai amal kebaikan oleh Allah SWT. InsyaAllah, aku akan tepati janji untuk selalu mengingatkanmu 😊🙏\n\n_Jika ingin mengganti lokasi, kamu bisa menggunakan perintah \`/gantilokasi\`_\n\n> © MUADZIN BOT`;
                         await sock.sendMessage(from, { text: successMessage }, { quoted: msg });
                         
-                        // --- NOTIFIKASI KE OWNER (SUBSCRIBE) ---
                         try {
                             const totalSubscribers = Object.keys(subscribers).length;
                             const ownerJid = `${OWNER_NUMBER}@s.whatsapp.net`;
@@ -957,7 +978,6 @@ async function connectToWhatsApp() {
                         } catch (e) {
                             console.error("[OWNER NOTIF ERROR] Gagal mengirim notifikasi subscribe ke owner:", e);
                         }
-                        // --- AKHIR NOTIFIKASI ---
             
                     } else if (state === 'awaiting_city_change_location') {
                         const successMessage = `✅ Lokasi berhasil diubah! Pengingat sekarang diatur untuk kota *${finalCityName}*.\n\n> © MUADZIN BOT`;
@@ -972,8 +992,6 @@ async function connectToWhatsApp() {
                 
                 return;
             }
-
-
             
             if (isGroup && !body.trim().startsWith('/')) {
                 return;
@@ -998,11 +1016,9 @@ async function connectToWhatsApp() {
 
             switch (command) {
                 case '/aturpengingat':
-                    // PERBAIKAN: Cek jika user sudah berlangganan
                     if (subscribers[from]) {
                         await sock.sendMessage(from, { text: `🔔 *Kamu Sudah Berlangganan*\n\nPengingat sudah aktif untuk kota *${subscribers[from].city}*.\n\n- Untuk mengubah lokasi, gunakan perintah \`/gantilokasi\`.\n- Untuk berhenti menerima pengingat, gunakan perintah \`/berhenti\`.\n\n> © MUADZIN BOT` }, { quoted: msg });
                     } else {
-                        // PERBAIKAN: Menambahkan saran /kota saat meminta input
                         userState[from] = 'awaiting_city_subscribe';
                         await sock.sendMessage(from, { text: "Silakan ketik nama kota yang kamu inginkan untuk mengatur pengingat waktu Sholat.\n\nContoh: `Pekanbaru`\n\n_Untuk melihat daftar kota yang didukung, ketik */kota*_\n\n> © MUADZIN BOT" }, { quoted: msg });
                     }
@@ -1013,35 +1029,27 @@ async function connectToWhatsApp() {
                         await sock.sendMessage(from, { text: "Maaf, kamu belum berlangganan pengingat.\n\nSilakan atur pengingat dulu dengan perintah `/aturpengingat`.\n\n> © MUADZIN BOT" }, { quoted: msg });
                         return;
                     }
-                    // PERBAIKAN: Menambahkan saran /kota saat meminta input
                     userState[from] = 'awaiting_city_change_location';
                     await sock.sendMessage(from, { text: `📍 Lokasi saat ini: *${subscribers[from].city}*.\n\nSilakan ketik nama kota baru untuk mengubah lokasi pengingat.\n\n_Ketik \`/kota\` untuk melihat contoh nama kota._\n\n> © MUADZIN BOT` }, { quoted: msg });
                     break;
                 
-                                case '/berhenti':
-                case '/unsubscribe': // Alias
+                case '/berhenti':
+                case '/unsubscribe':
                     if (subscribers[from]) {
-                        // Langkah 1: Ambil data user yang mau berhenti SEBELUM dihapus
                         const unsubscriberData = subscribers[from]; 
-                        
-                        // Langkah 2: Hapus data dari database
                         delete subscribers[from];
                         saveData(SUBSCRIBERS_FILE, subscribers);
                         
-                        // Langkah 3: Batalkan semua jadwal yang berjalan untuk user tersebut
                         if (scheduledJobs[from]) {
                             scheduledJobs[from].forEach(job => job.cancel());
                             delete scheduledJobs[from];
                         }
                         
-                        // Langkah 4: Kirim pesan konfirmasi ke user yang berhenti
                         await sock.sendMessage(from, { text: "✅ Langganan berhasil diberhentikan.\n\nTerima kasih banyak telah menjadi bagian dari perjalanan Muadzin Bot.\nSemoga Allah SWT senantiasa memudahkanmu dalam menjaga konsistensi dalam melaksanakan sholat tepat waktu. Jika nanti berubah pikiran, aku akan selalu ada di sini untuk membantu mengingatkanmu kembali. Sampai jumpa lagi! 👋😊\n\n> © MUADZIN BOT" }, { quoted: msg });
                         
-                        // Langkah 5: Kirim notifikasi ke owner (sekarang sudah aman)
                         try {
                             const totalSubscribers = Object.keys(subscribers).length;
                             const ownerJid = `${OWNER_NUMBER}@s.whatsapp.net`;
-                            // Menggunakan 'unsubscriberData' yang sudah kita simpan di awal
                             const notifMessage = `🔕 *BERHENTI LANGGANAN*\n\nBaru saja ada user yang berhenti langganan, berikut detailnya:\n\n> 👤 *Nama:* ${unsubscriberData.name}\n> 📞 *Nomor:* ${from.split('@')[0]}\n> 🏙️ *Kota Terdaftar:* ${unsubscriberData.city}\n> 📊 *Total Pelanggan Saat Ini:* ${totalSubscribers}\n\n> © MUADZIN BOT`;
                             await sock.sendMessage(ownerJid, { text: notifMessage });
                         } catch (e) {
@@ -1053,14 +1061,13 @@ async function connectToWhatsApp() {
                     }
                     break;
 
-                                                case '/jadwal':
+                case '/jadwal':
                     const targetCity = cityArg || (subscribers[from] ? subscribers[from].city : null);
                     if (!targetCity) {
                         await sock.sendMessage(from, { text: "Ketikkan nama kota yang ingin kamu cek jadwal nya atau atur pengingat terlebih dahulu.\n\n*Panduan:*\n- Cek jadwal kota lain: `/jadwal Nama Kota`\n- Lihat daftar nama kota: `/kota`\n- Atur jadwal pengingat otomatis: `/aturpengingat`\n\n> © MUADZIN BOT" }, { quoted: msg });
                         return;
                     }
 
-                    // --- PRA-VALIDASI UNTUK /JADWAL ---
                     if (cityArg) {
                         const normalizedCity = cityArg.toLowerCase();
                         if (!KOTA_VALID.has(normalizedCity)) {
@@ -1069,7 +1076,6 @@ async function connectToWhatsApp() {
                             return; 
                         }
                     }
-                    // --- AKHIR DARI PRA-VALIDASI ---
 
                     await sock.sendMessage(from, { text: `Mencari jadwal untuk *${targetCity}*...` });
                     const prayerDataToday = await fetchPrayerTimes(targetCity, new Date());
@@ -1097,16 +1103,16 @@ async function connectToWhatsApp() {
                         
                         scheduleMessage += `*Hari ini*\n`;
                         scheduleMessage += `> Imsak: *${timingsToday.Imsak}*\n`;
-                            scheduleMessage += `> Subuh: *${timingsToday.Fajr}*\n`;
-                            scheduleMessage += `> Syuruk (Matahari terbit): *${timingsToday.Sunrise}*\n`;
-                            scheduleMessage += `> Dzuhur: *${timingsToday.Dhuhr}*\n`;
-                            scheduleMessage += `> Ashar: *${timingsToday.Asr}*\n`;
-                            scheduleMessage += `> Ghurub (Matahari terbenam): *${timingsToday.Sunset}*\n`;
-                            scheduleMessage += `> Maghrib: *${timingsToday.Maghrib}*\n`;
-                            scheduleMessage += `> Isya: *${timingsToday.Isha}*\n`;
-                            scheduleMessage += `> Tahajud (⅓ Malam Awal): *${timingsToday.Firstthird}*\n`;
-                            scheduleMessage += `> Tengah Malam: *${timingsToday.Midnight}*\n`;
-                            scheduleMessage += `> Tahajud (⅓ Malam Akhir): *${timingsToday.Lastthird}*\n`;
+                        scheduleMessage += `> Subuh: *${timingsToday.Fajr}*\n`;
+                        scheduleMessage += `> Syuruk (Matahari terbit): *${timingsToday.Sunrise}*\n`;
+                        scheduleMessage += `> Dzuhur: *${timingsToday.Dhuhr}*\n`;
+                        scheduleMessage += `> Ashar: *${timingsToday.Asr}*\n`;
+                        scheduleMessage += `> Ghurub (Matahari terbenam): *${timingsToday.Sunset}*\n`;
+                        scheduleMessage += `> Maghrib: *${timingsToday.Maghrib}*\n`;
+                        scheduleMessage += `> Isya: *${timingsToday.Isha}*\n`;
+                        scheduleMessage += `> Tahajud (⅓ Malam Awal): *${timingsToday.Firstthird}*\n`;
+                        scheduleMessage += `> Tengah Malam: *${timingsToday.Midnight}*\n`;
+                        scheduleMessage += `> Tahajud (⅓ Malam Akhir): *${timingsToday.Lastthird}*\n`;
 
                         if (prayerDataTomorrow && prayerDataTomorrow.timings) {
                             const timingsTomorrow = prayerDataTomorrow.timings;
@@ -1125,19 +1131,13 @@ async function connectToWhatsApp() {
                         }
 
                         scheduleMessage += `\n${calculateCountdown(timingsToday)}`;
-                        
-                        // PERUBAHAN DI SINI: Kondisi "if (cityArg)" dihapus
                         scheduleMessage += `\n\n*PANDUAN*\n- Cek jadwal kota lain: \`/jadwal Nama Kota\`\n- Lihat daftar lengkap kota: \`/kota\``;
-                        
                         scheduleMessage += `\n\n> © MUADZIN BOT`;
                         await sock.sendMessage(from, { text: scheduleMessage }, { quoted: msg });
                     } else {
                         await sock.sendMessage(from, { text: `Maaf, terjadi kendala saat mengambil data untuk kota *${targetCity}*. Coba periksa lagi ejaannya atau lihat daftar di \`/kota\`\n\n> © MUADZIN BOT` });
                     }
                     break;
-
-
-                // ... (Sisa case seperti /testnotif, /broadcast, dll tetap sama)
                 case '/testnotif':
                     if (!subscribers[from]) {
                         await sock.sendMessage(from, { text: "Kamu atau grup ini harus subscribe dulu untuk menggunakan fitur tes ini. Ketik `/aturpengingat`" });
@@ -1189,18 +1189,11 @@ async function connectToWhatsApp() {
                     await sock.sendMessage(from, { text: `OK, menjalankan tes pengingat Al-Kahfi...` });
                     await sendAlKahfiReminder(sock, from);
                     break;
-                                case '/testdoa':
+                case '/testdoa':
                     await sock.sendMessage(from, { text: "OK, menjalankan tes kirim Doa & Harapan Harian..." });
-
-                    // Memastikan Bank Doa sudah ada dan tidak kosong
                     if (typeof DOA_HARIAN !== 'undefined' && DOA_HARIAN.length > 0) {
-                        // Mengambil satu pesan acak dari bank doa
                         const randomWish = DOA_HARIAN[Math.floor(Math.random() * DOA_HARIAN.length)];
-                        
-                        // Membungkus pesan dengan format yang sama seperti pengiriman terjadwal
                         const messageToSend = `*✨ PESAN KEBAIKAN UNTUKMU ✨*\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
-
-                        // Mengirim pesan tes hanya ke nomor Anda
                         await sock.sendMessage(from, { text: messageToSend });
                     } else {
                         await sock.sendMessage(from, { text: "Maaf, 'Bank Doa' (DOA_HARIAN) sepertinya belum didefinisikan di kodemu." });
@@ -1314,17 +1307,9 @@ async function connectToWhatsApp() {
                             await sock.sendMessage(from, { sticker: { url: welcomeStickerPath } });
                         }
                         
-                                        
-                        
-                        // =======================================================
-                        // >>> PERUBAHAN LUXON DIMULAI DI SINI <<<
-                        // =======================================================
-
-                        // Menggunakan Luxon untuk mendapatkan waktu WIB yang akurat
                         const nowInJakarta = DateTime.now().setZone('Asia/Jakarta');
                         const hour = nowInJakarta.hour;
 
-                        // 1. Menentukan sapaan berdasarkan waktu (logika ini tidak berubah)
                         let timeOfDayGreeting = "";
                         let timeOfDayEmoji = "";
 
@@ -1342,7 +1327,6 @@ async function connectToWhatsApp() {
                             timeOfDayEmoji = "🌙";
                         }
                         
-                        // Memilih satu doa secara acak (logika ini tidak berubah)
                         const dynamicWishes = [
                             "Semoga Allah SWT selalu melimpahkan rahmat dan berkah-Nya di setiap langkahmu hari ini. 🤲",
                             "Semoga hari ini menjadi awal yang penuh kemudahan dan keberkahan dari Allah SWT. 🤲",
@@ -1367,19 +1351,13 @@ async function connectToWhatsApp() {
                         ];
                         const randomWish = dynamicWishes[Math.floor(Math.random() * dynamicWishes.length)];
 
-                        // Menyusun pesan selamat datang (logika ini tidak berubah)
                         const welcomeMessageText = `Ahlan wa Sahlan *${userName}*! ${timeOfDayGreeting} ${timeOfDayEmoji}\n\nAku Muadzin Bot, asisten pengingat waktu sholat mu ✨\n\nUntuk memulai, silakan gunakan salah satu perintah berikut:  \n- \`/menu\` - untuk melihat semua fitur yang bisa kamu gunakan  \n- \`/panduan\` - jika kamu memerlukan bantuan atau penjelasan\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
                         
                         await sock.sendMessage(from, { 
                             text: welcomeMessageText,
                         });
-
-                        // =======================================================
-                        // >>> PERUBAHAN LUXON SELESAI DI SINI <<<
-                        // =======================================================
                     }
                     break;
-
             }
 
         } catch (error) {
@@ -1389,161 +1367,10 @@ async function connectToWhatsApp() {
         }
     });
 
-    // ========================================================================
-// >>> GANTI SELURUH FUNGSI connectToWhatsApp LAMA DENGAN YANG DI BAWAH INI <<<
-// ========================================================================
+}
 
-function connectToWhatsApp() {
-    // ... (pastikan variabel sock, schedule, DisconnectReason, dll sudah di-import/didefinisikan di atas fungsi ini)
-
-    sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect } = update;
-
-        if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Koneksi terputus:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
-            if (shouldReconnect) {
-                connectToWhatsApp();
-            }// ========================================================================
-
-function c// ========================================================================
-
-function connectToWhatsApp() {
-    // ... (pastikan variabel sock, schedule, DisconnectReason, dll sudah di-import/didefinisikan di atas fungsi ini)
-
-    sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect } = update;
-
-        if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Koneksi terputus:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
-            if (shouldReconnect) {
-                connectToWhatsApp();
-            }
-        } else if (connection === 'open') {
-            console.log('Berhasil terhubung ke WhatsApp! Bot siap digunakan.');
-onnectToWhatsApp() {
-    // ... (pastikan variabel sock, schedule, DisconnectReason, dll sudah di-import/didefinisikan di atas fungsi ini)
-
-    sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect } = update;
-
-        if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Koneksi terputus:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
-            if (shouldReconnect) {
-                connectToWhatsApp();
-            }
-        } else if (connection === 'open') {
-            console.log('Berhasil terhubung ke WhatsApp! Bot siap digunakan.');
-
-        } else if (connection === 'open') {
-            console.log('Berhasil terhubung ke WhatsApp! Bot siap digunakan.');
-
-            // Menjadwalkan ulang pengingat sholat untuk semua pelanggan saat bot online
-            for (const jid in subscribers) {
-                const subscriberData = subscribers[jid];
-                await scheduleRemindersForUser(sock, jid, subscriberData.city, subscriberData.name || 'Kawan');
-            }
-
-            // =================================================================
-            // >> PENJADWALAN GLOBAL DENGAN TIMEZONE WIB (ASIA/JAKARTA) <<
-            // =================================================================
-
-            // --- JADWAL AYAT ACAK (12:40 & 18:40 WIB) ---
-            const verseSchedule = new schedule.RecurrenceRule();
-            verseSchedule.tz = 'Asia/Jakarta';
-            verseSchedule.hour = [12, 18];
-            verseSchedule.minute = 40;
-
-            schedule.scheduleJob(verseSchedule, async () => {
-                console.log(`[INFO] Mengirim Random Ayat berkala (WIB) ke semua pelanggan...`);
-                for (const jid in subscribers) {
-                    try {
-                        await sendDailyVerse(sock, jid, true);
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    } catch (e) {
-                        console.error(`[RANDOM AYAT ERROR] Gagal mengirim ke ${jid}:`, e.message);
-                    }
-                }
-            });
-
-            // --- JADWAL DOA & HARAPAN BAIK (09:00 & 20:00 WIB) ---
-            const wishSchedule = new schedule.RecurrenceRule();
-            wishSchedule.tz = 'Asia/Jakarta';
-            wishSchedule.hour = [9, 20];
-            wishSchedule.minute = 0;
-
-            schedule.scheduleJob(wishSchedule, async () => {
-                console.log(`[INFO] Mengirim Doa & Harapan Harian (WIB) ke semua pelanggan...`);
-                const randomWish = DOA_HARIAN[Math.floor(Math.random() * DOA_HARIAN.length)];
-                const messageToSend = `*✨ PESAN KEBAIKAN UNTUKMU ✨*\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
-                for (const jid in subscribers) {
-                    try {
-                        await sock.sendMessage(jid, { text: messageToSend });
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    } catch (e) {
-                        console.error(`[DOA HARIAN ERROR] Gagal mengirim ke ${jid}:`, e.message);
-                    }
-                }
-            });
-
-            // --- JADWAL DZIKIR PAGI (07:00 WIB) ---
-            const dzikirPagiRule = new schedule.RecurrenceRule();
-            dzikirPagiRule.hour = 7;
-            dzikirPagiRule.minute = 0;
-            dzikirPagiRule.tz = 'Asia/Jakarta';
-
-            schedule.scheduleJob(dzikirPagiRule, async () => {
-                console.log("[INFO] Mengirim Dzikir Pagi ke semua pelanggan...");
-                for (const jid in subscribers) {
-                    await sendDzikir(sock, jid, 'pagi');
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Jeda konsisten
-                }
-            });
-
-            // --- JADWAL DZIKIR PETANG (16:00 WIB) ---
-            const dzikirPetangRule = new schedule.RecurrenceRule();
-            dzikirPetangRule.hour = 16;
-            dzikirPetangRule.minute = 0;
-            dzikirPetangRule.tz = 'Asia/Jakarta';
-
-            schedule.scheduleJob(dzikirPetangRule, async () => {
-                console.log("[INFO] Mengirim Dzikir Petang ke semua pelanggan...");
-                for (const jid in subscribers) {
-                    await sendDzikir(sock, jid, 'petang');
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Jeda konsisten
-                }
-            });
-
-            // --- JADWAL AL-KAHFI (Jumat, 08:00 WIB) ---
-            const alKahfiRule = new schedule.RecurrenceRule();
-            alKahfiRule.dayOfWeek = 5; // 5 = Jumat
-            alKahfiRule.hour = 8;
-            alKahfiRule.minute = 0;
-            alKahfiRule.tz = 'Asia/Jakarta';
-
-            schedule.scheduleJob(alKahfiRule, async () => {
-                console.log("[INFO] Mengirim pengingat Al-Kahfi ke semua pelanggan...");
-                for (const jid in subscribers) {
-                    await sendAlKahfiReminder(sock, jid);
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Jeda konsisten
-                }
-            });
-        }
-    });
-} // <-- Ini adalah penutup untuk fungsi connectToWhatsApp. Strukturnya sudah benar.
-
-// ========================================================================
-// >>> KODE DI BAWAH INI BIARKAN SEPERTI ASLINYA, JANGAN DIUBAH <<<
-// ========================================================================
-
-// =======================================================
-// >>> MULAI KODE KEEP-ALIVE (LETAKKAN DI SINI) <<<
-// =======================================================
-
+// --- KODE KEEP-ALIVE ---
 const PORT = process.env.PORT || 3000;
-
 http.createServer((req, res) => {
   res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('SERVER is alive and running! Support by @arhverse x NUSA KARSA');
@@ -1551,17 +1378,11 @@ http.createServer((req, res) => {
   console.log(`[SERVER] Keep-alive server berjalan di port ${PORT}`);
 });
 
-// =======================================================
-// >>> SELESAI KODE KEEP-ALIVE <<<
-// =======================================================
-
-// Memulai koneksi bot
+// --- Memulai koneksi bot ---
 connectToWhatsApp();
 
-
-// /--- KODE AUTO-RESTART ---
+// --- KODE AUTO-RESTART ---
 const watcher = chokidar.watch(__filename);
-
 watcher.on('change', path => {
   console.log(`[RELOADER] Perubahan terdeteksi pada ${path}. Merestart bot...`);
   watcher.close();
@@ -1575,23 +1396,3 @@ watcher.on('change', path => {
   
   process.exit();
 });
-
-
-
-// /--- KODE AUTO-RESTART ---
-const watcher = chokidar.watch(__filename);
-
-watcher.on('change', path => {
-  console.log(`[RELOADER] Perubahan terdeteksi pada ${path}. Merestart bot...`);
-  watcher.close();
-  
-  const newProcess = spawn(process.execPath, process.argv.slice(1), {
-    detached: true,
-    stdio: 'inherit'
-  });
-  
-  newProcess.unref();
-  
-  process.exit();
-});
-
