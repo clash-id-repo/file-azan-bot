@@ -297,7 +297,7 @@ Gunakan nama kota atau kabupaten dari daftar di bawah ini untuk hasil yang akura
 
 
 
-const DZIKIR_PAGI_TEXT = *☀️ WAKTUNYA DZIKIR PAGI*
+const DZIKIR_PAGI_TEXT = `*☀️ WAKTUNYA DZIKIR PAGI*
 
 *ِبِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ*
 
@@ -309,9 +309,9 @@ _"Dengan nama Allah SWT yang bila disebut, segala sesuatu di bumi dan langit tid
 _Barangsiapa yang mengucapkan dzikir tersebut sebanyak tiga kali di pagi hari, maka tidak akan ada bahaya yang tiba-tiba memudaratkannya._
 — (HR. Abu Daud no. 5088, 5089, Tirmidzi no. 3388, dan Ibnu Majah no. 3869)
 
-Jangan lupakan dzikir pagimu agar senantiasa dilindungi Allah SWT SWT. 🙏\n\n> © MUADZIN BOT;
+Jangan lupakan dzikir pagimu agar senantiasa dilindungi Allah SWT SWT. 🙏\n\n> © MUADZIN BOT`;
 
-const DZIKIR_PETANG_TEXT = *🌙 WAKTUNYA DZIKIR PETANG*
+const DZIKIR_PETANG_TEXT = `*🌙 WAKTUNYA DZIKIR PETANG*
 
 *أَعُوذُ بِكَلِمَاتِ ٱللّٰهِ ٱلتَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ*
 
@@ -328,10 +328,10 @@ Rasulullah ﷺ bersabda:
 maka tidak ada sesuatu pun yang akan membahayakannya hingga ia pergi dari tempat itu."
 — (HR. Muslim, no. 2708)
 
-Semoga kita semua selalu dalam lindungan-Nya. 🙏\n\n> © MUADZIN BOT;
+Semoga kita semua selalu dalam lindungan-Nya. 🙏\n\n> © MUADZIN BOT`;
 
 
-const PANDUAN_TEXT = 📖 *PANDUAN PENGGUNAAN MUADZIN BOT* 
+const PANDUAN_TEXT = `📖 *PANDUAN PENGGUNAAN MUADZIN BOT* 
 
 1️⃣ *Melihat Jadwal Sholat*
 Ketik \/jadwal\ untuk melihat jadwal sholat di kota yang telah kamu atur.
@@ -356,23 +356,23 @@ Ketik perintah \/randomayat\
 Gunakan perintah \/infobot\, \/kota\, \/donasi\, atau \/owner\ untuk informasi lebih lanjut.
 
 💫 *SUKA BOT INI?*
-Silakan share bot ini kesemua kenalan kamu agar mendapatkan manfaatnya juga dan Dukung bot ini dengan berdonasi melalui perintah \/donasi\.\n\n> © MUADZIN BOT;
+Silakan share bot ini kesemua kenalan kamu agar mendapatkan manfaatnya juga dan Dukung bot ini dengan berdonasi melalui perintah \/donasi\.\n\n> © MUADZIN BOT`;
 
-const DONASI_TEXT = 💝 *DUKUNG MUADZIN BOT* 
+const DONASI_TEXT = `💝 *DUKUNG MUADZIN BOT* 
 
 Terima kasih sudah berdonasi untuk mendukung bot ini! Setiap dukungan darimu sangat berarti agar bot bisa terus aktif dan dikembangkan dengan fitur-fitur baru.
 
 Kamu bisa memberikan donasi melalui QRIS di atas dengan menggunakan dompet digital atau Mobile Banking yang kamu miliki.
 
-Terima kasih banyak atas kebaikanmu, semoga Allah SWT SWT melipat gandakan rezekimu! ✨\n\n> © MUADZIN BOT;
+Terima kasih banyak atas kebaikanmu, semoga Allah SWT SWT melipat gandakan rezekimu! ✨\n\n> © MUADZIN BOT`;
 
-const OWNER_TEXT = 👨‍💻 *INFORMASI OWNER* 
+const OWNER_TEXT = `👨‍💻 *INFORMASI OWNER* 
 
 Bot ini dibuat dan dikelola oleh ARH [@arhverse] x NUSA KARSA [nusakarsa.id]. Jika kamu menemukan bug, punya saran, atau butuh bantuan, silakan hubungi owner.
 
 💬 *WhatsApp:* wa.me/${OWNER_NUMBER}
 
-Mohon untuk tidak melakukan spam atau panggilan telepon ya. Terima kasih!\n\n> © MUADZIN BOT;
+Mohon untuk tidak melakukan spam atau panggilan telepon ya. Terima kasih!\n\n> © MUADZIN BOT`;
 
 const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) => {
     // --- DAFTAR DOA DINAMIS ---
