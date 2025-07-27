@@ -10,11 +10,8 @@ const fs =require('fs');
 const qrcode = require('qrcode-terminal');
 const axios = require('axios');
 const schedule = require('node-schedule');
-// --- PENAMBAHAN UNTUK AUTO-RESTART ---
-const chokidar = require('chokidar');
-const { spawn } = require('child_process');
 const { DateTime } = require('luxon');
-const http = require('http'); // <-- Pastikan ini ada di atas
+const http = require('http');
 
 
 // --- PENGATURAN & VARIABEL GLOBAL ---
@@ -25,7 +22,7 @@ let scheduledJobs = {};
 const botStartTime = Date.now();
 
 // --- STATE MANAGEMENT UNTUK INTERAKSI ---
-const userState = {}; // Menyimpan state pengguna untuk interaksi
+const userState = {};
 
 // --- PENGATURAN ANTI-SPAM ---
 const SPAM_MESSAGE_LIMIT = 10; 
@@ -50,107 +47,6 @@ const PRAYER_NAMES_MAP = {
     Firstthird: '⅓ Malam Awal',
     Lastthird: '⅓ Malam Akhir'
 };
-
-// --- BANK DOA & HARAPAN BAIK (100 PESAN PENYEMANGAT) ---
-const DOA_HARIAN = [
-    // Semangat & Motivasi
-    "Jangan takut melangkah hari ini. Setiap langkahmu, sekecil apa pun, adalah bagian dari perjalanan hebat. Semoga Allah SWT mudahkan. Semangat! 🔥",
-    "Jika kamu merasa lelah, ingatlah bahwa istirahat adalah bagian dari perjuangan. Pejamkan matamu sejenak, berdoa, lalu lanjutkan dengan kekuatan baru. Kamu bisa! 💪",
-    "Kegagalan hari ini adalah pelajaran untuk kemenangan esok hari. Jangan menyerah, terus perbaiki diri. Kamu lebih kuat dari yang kamu kira! 🚀",
-    "Waktu terus berjalan. Manfaatkan setiap detiknya untuk hal yang mendekatkanmu pada-Nya dan pada impianmu. Waktumu berharga! ⏳",
-    "Semangat kerjanya! Niatkan setiap usahamu sebagai ibadah, maka lelahmu akan menjadi pahala yang tak terhingga. Bismillah! 💼",
-    "Cita-citamu besar? Bagus! Iringi dengan doa yang besar dan usaha yang tak kalah besar. Allah SWT Maha Mendengar. 🎯",
-    "Hari esok masih misteri. Hari kemarin adalah kenangan. Hari ini adalah anugerah. Lakukan yang terbaik di hari ini! 🎁",
-    "Setiap ujian yang datang tidak pernah melebihi batas kemampuanmu. Allah SWT tahu kamu kuat. Hadapi dengan sabar dan sholat. 🙏",
-    "Jangan biarkan keraguan menghentikanmu. Ucapkan 'Bismillah', lalu langkahkan kakimu. Allah SWT akan membuka jalan bagi mereka yang berusaha. ✨",
-    "Ingat, kamu tidak harus menjadi hebat untuk memulai, tapi kamu harus memulai untuk menjadi hebat. Langkah pertama hari ini adalah kuncinya. 🔑",
-    "Energi pagimu menentukan sisa harimu. Buka hari dengan doa dan optimisme, insyaAllah hasilnya akan luar biasa. Kamu siap? 🔥",
-    "Saat kamu merasa ingin menyerah, ingat kembali alasan mengapa kamu memulai. Tujuanmu lebih besar dari rintanganmu saat ini. Terus maju! 🚶‍♂️🚶‍♀️",
-    "Kesalahan bukan akhir dari segalanya, melainkan guru terbaik. Belajar, bangkit, dan jadilah versi dirimu yang lebih baik hari ini. 🌱",
-    "Fokus pada kemajuan, bukan kesempurnaan. Setiap progres, sekecil apapun, layak untuk dirayakan. Kamu sudah melakukan yang terbaik! 🏆",
-    "Dunia mungkin tidak selalu adil, tapi usaha dan doa tidak pernah sia-sia di mata Allah SWT. Teruslah berjuang dengan cara yang baik. 💖",
-    "Ubah 'aku tidak bisa' menjadi 'aku akan coba'. Kekuatan pikiran dan doa bisa memindahkan gunung. Yakinlah! ⛰️",
-    "Untuk setiap pintu yang tertutup, percayalah Allah SWT telah menyiapkan pintu lain yang lebih baik untukmu. Jangan berhenti mencari. 🚪",
-    "Jangan menunggu motivasi datang, ciptakan motivasimu sendiri. Mulai dari hal kecil, selesaikan, dan rasakan kepuasannya. Lanjutkan! ✨",
-    "Jadilah produktif, bukan hanya sibuk. Tentukan prioritasmu hari ini dan fokuslah pada hal yang benar-benar penting. Kamu pasti bisa! ✅",
-    "Kekuatan terbesar ada setelah kamu berhasil melewati kelemahan terbesarmu. Hadapi tantangan hari ini, kamu akan jadi lebih kuat. 💪",
-
-    // Syukur & Refleksi
-    "Pernahkah kamu berhenti sejenak hanya untuk bersyukur atas nafas hari ini? Alhamdulillah... Semoga sisa harimu dipenuhi ketenangan. 🙏",
-    "Rezeki bukan hanya soal materi, tapi juga teman yang baik dan hati yang damai. Semoga hari ini kita dikelilingi oleh keduanya. Aamiin. 🌿",
-    "Jangan bandingkan dirimu dengan orang lain. Bunga mawar dan matahari tidak bisa dibandingkan, keduanya indah dengan caranya sendiri. Begitu juga kamu. 🌷",
-    "Saat semua terasa berat, coba lihat ke atas. Ada Allah SWT yang Maha Besar. Masalahmu tidak ada apa-apanya bagi-Nya. Mintalah pertolongan. ✨",
-    "Lihat sekelilingmu. Ada begitu banyak nikmat kecil yang sering terlupakan. Udara yang kita hirup, air yang kita minum. Alhamdulillah 'ala kulli haal. 💨",
-    "Jangan menunggu bahagia untuk bersyukur, tapi bersyukurlah, maka kebahagiaan akan datang menghampirimu. Kuncinya adalah syukur. 😊",
-    "Ucapkanlah 'Alhamdulillah' setidaknya 5 kali sekarang. Rasakan getaran syukurnya di dalam hati. Nikmat mana lagi yang kau dustakan? 💖",
-    "Terkadang Allah SWT menahan sesuatu darimu bukan untuk menghukum, tapi untuk melindungimu. Ucapkan Alhamdulillah atas apa yang tidak kamu miliki. 🙏",
-    "Hidup ini singkat. Jangan habiskan dengan keluhan. Habiskan dengan syukur, doa, dan usaha untuk menjadi lebih baik. ⏳",
-    "Setiap pagi adalah halaman baru dalam buku kehidupanmu. Tulislah cerita yang indah hari ini, dimulai dengan rasa syukur. 📖",
-    "Sudahkah kamu berterima kasih pada dirimu sendiri hari ini? Terima kasih telah bertahan, berjuang, dan tidak menyerah. Kamu hebat! 🤗",
-    "Melihat ke atas untuk motivasi, melihat ke bawah untuk bersyukur. Keseimbangan ini akan membuat hatimu selalu damai. ⚖️",
-    "Nikmat sehat adalah mahkota di kepala orang sehat yang hanya bisa dilihat oleh orang sakit. Syukuri sehatmu hari ini. 💚",
-    "Jangan terlalu khawatirkan masa depan hingga lupa mensyukuri hari ini. Hari ini adalah anugerah nyata yang ada di tanganmu. ✨",
-    "Semakin banyak kamu bersyukur, semakin banyak hal yang akan datang untuk kamu syukuri. Jadikan syukur sebagai kebiasaanmu. 🌿",
-    "Saat kamu merasa tidak punya apa-apa, ingatlah kamu punya Allah SWT. Dan itu sudah lebih dari cukup. Alhamdulillah. ❤️",
-    "Mungkin doamu belum terkabul, tapi lihatlah berapa banyak nikmat yang Allah SWT berikan tanpa kamu minta. Dia Maha Tahu yang terbaik. 🙏",
-    "Harta yang paling berharga adalah keluarga yang hangat dan teman yang tulus. Syukuri kehadiran mereka dalam hidupmu. 👨‍👩‍👧‍👦",
-    "Kesulitan adalah cara Allah SWT memberitahu bahwa kamu sedang dirindukan dalam sujud dan doamu. Dekati Dia. ✨",
-    "Satu tarikan nafas adalah anugerah. Gunakan ia untuk berdzikir, memuji nama-Nya. Subhanallah, Walhamdulillah, Walaa Ilaha Illallah, Wallahu Akbar. 💨",
-
-    // Ketenangan & Kebaikan
-    "Satu kebaikan kecil hari ini bisa menjadi alasan senyum orang lain. Sudahkah kamu berbagi kebaikan hari ini? Yuk, tebar senyum! 😄",
-    "Apapun yang sedang kamu hadapi, ingatlah: 'Laa tahzan, innallaha ma'ana' (Jangan bersedih, sesungguhnya Allah SWT beserta kita). Kamu tidak sendirian. ❤️",
-    "Tersenyumlah! Senyummu adalah sedekah termudah, obat terbaik untuk dirimu sendiri, dan cahaya bagi orang di sekitarmu. Coba sekarang! 😊",
-    "Jika ada yang menyakitimu, balaslah dengan doa. Mendoakan kebaikan untuk orang lain adalah cara terbaik membersihkan hati. 💖",
-    "Sudahkah kamu memaafkan seseorang hari ini? Memaafkan membebaskan dua jiwa: jiwamu dan jiwa orang itu. Hati yang lapang adalah sumber kebahagiaan. 🤗",
-    "Semoga hari ini, kita lebih banyak mendengar daripada berbicara, lebih banyak memberi daripada meminta, dan lebih banyak bersyukur daripada mengeluh. Aamiin. 🌿",
-    "Jadilah seperti akar, tak terlihat namun menjadi sumber kekuatan bagi pohon untuk tumbuh tinggi. Ikhlaslah dalam setiap kebaikan. 🌳",
-    "Semoga kita dijauhkan dari sifat sombong dan iri hati. Semoga hati kita selalu bersih dan dipenuhi kasih sayang. Aamiin. 🕊️",
-    "Kebaikan itu menular. Mulailah dari dirimu, dan lihat bagaimana energi positif itu menyebar ke sekelilingmu. ✨",
-    "Jadilah pribadi yang pemaaf. Dendam itu berat, hanya akan membebani langkahmu. Memaafkan itu ringan dan melapangkan. 🎈",
-    "Saat kamu merasa sendirian, ingatlah Allah SWT sedang memberimu kesempatan untuk berbicara hanya dengan-Nya. Manfaatkan momen itu. 🌙",
-    "Ketenangan sejati bukan saat tidak ada masalah, tapi saat hatimu tetap terhubung dengan Allah SWT di tengah badai masalah. 🙏",
-    "Jangan biarkan perlakuan buruk orang lain merusak kedamaian hatimu. Balas dengan diam, doa, dan kebaikan. Kamu lebih mulia. ✨",
-    "Menjadi orang baik tidak menjamin semua orang akan menyukaimu, tapi itu menjamin Allah SWT akan menyukaimu. Dan itu yang terpenting. ❤️",
-    "Hati yang tenang adalah istana termewah. Jagalah ia dari pikiran negatif dan prasangka buruk. Hiasi dengan dzikir. 👑",
-    "Bantu orang lain tanpa pamrih, maka Allah SWT akan membantumu dari arah yang tak terduga. Tangan di atas lebih baik dari tangan di bawah. 🤝",
-    "Hindari perdebatan yang tidak perlu. Mengalah bukan berarti kalah, terkadang itu adalah kemenangan untuk kedamaian hatimu. 🤫",
-    "Bicara yang baik atau diam. Lisanmu mencerminkan hatimu. Semoga lisan kita selalu basah karena dzikir dan kata-kata yang menyejukkan. 💬",
-    "Setiap jiwa butuh ketenangan. Temukan ketenanganmu dalam sholat, dalam Al-Qur'an, dan dalam mengingat-Nya. 💖",
-    "Sebarkan salam. 'Assalamualaikum' bukan hanya sapaan, tapi doa. Semoga keselamatan, rahmat, dan berkah-Nya menyertaimu. 🙏",
-
-    // Rezeki & Kemudahan
-    "Semoga makanan yang kamu nikmati hari ini menjadi sumber energi untuk beribadah dan berbuat baik. Jangan lupa Bismillah. 🍽️",
-    "Semoga setiap tetes keringat yang jatuh dalam usahamu mencari rezeki halal, menjadi saksi perjuanganmu di hadapan-Nya kelak. Aamiin. 💧",
-    "Satu sedekah kecil di pagi hari bisa menolak bala dan membuka pintu rezeki. Sudahkah kamu bersedekah hari ini? 💸",
-    "Semoga Allah SWT selalu menuntun langkah kita ke tempat-tempat yang baik, bertemu orang-orang yang baik, dan melakukan hal-hal yang baik. 🚶‍♂️🚶‍♀️",
-    "Ya Allah, cukupkan kebutuhan kami, lapangkan rezeki kami, dan berkahi setiap apa yang kami miliki. Aamiin Ya Rabbal Alamin. ✨",
-    "Pintu rezeki bukan hanya dari bekerja, tapi juga dari bakti pada orang tua, dari silaturahmi, dan dari sedekah. Mari kita buka semua pintunya. 🚪",
-    "Jangan khawatirkan rezekimu. Ia sudah diatur dan tidak akan pernah tertukar. Khawatirkan amalanmu, karena itu bekalmu. 🙏",
-    "Jika Allah SWT menahan rezekimu, mungkin Dia ingin memberimu yang lebih baik di waktu yang tepat. Teruslah berprasangka baik dan berusaha. ✨",
-    "Kunci rezeki yang paling ampuh adalah sholat tepat waktu dan istighfar. Mari kita amalkan keduanya hari ini. 🔑",
-    "Ya Allah, kami memohon kepada-Mu ilmu yang bermanfaat, rezeki yang baik, dan amal yang diterima. Aamiin. 🤲",
-    "Rezeki yang paling nikmat adalah saat ia menjadi jalan untuk kita lebih banyak beribadah dan membantu sesama. Semoga rezeki kita berkah. 🌿",
-    "Jangan hanya mengejar dunia, nanti kamu lelah. Libatkan Allah SWT, maka dunia yang akan mengejarmu. Bismillah. 🚀",
-    "Setiap makhluk hidup di bumi sudah dijamin rezekinya. Tugas kita hanya menjemputnya dengan cara yang halal dan diridhai-Nya. 🐾",
-    "Mengeluh tidak akan menambah rezekimu, tapi bersyukur akan mengundangnya datang. Yuk, ganti keluhan dengan Alhamdulillah. 😊",
-    "Kadang kemudahan datang setelah kita memudahkan urusan orang lain. Mari saling membantu hari ini. 🤝",
-    "Ya Allah, jauhkan kami dari hutang yang memberatkan dan rezeki yang haram. Berikan kami kecukupan dan keberkahan. Aamiin. 🙏",
-
-    // Pengingat Ibadah
-    "Jangan lupa istighfar. Mungkin ada pintu rezeki yang tertahan karena dosa kecil yang tak kita sadari. Astaghfirullahaladzim...",
-    "Sebuah pengingat lembut: Sudahkah kamu mendoakan kedua orang tuamu hari ini? Mereka adalah sumber keberkahan terbesarmu. 🤲",
-    "Satu ayat Al-Qur'an yang dibaca dengan tulus bisa menenangkan hati yang paling gelisah. Sudahkah kamu menyapa Kalam-Nya hari ini? 📖",
-    "Ingat, sholat bukan hanya kewajiban, tapi kebutuhan. Itu adalah waktu istirahatmu bersama Sang Pencipta. Nikmatilah setiap gerakannya. 🙏",
-    "Pengingat sholat Dhuha: Dua rakaat di pagi hari sebagai tanda syukur, insyaAllah membuka pintu-pintu rezeki. Sudahkah kamu? 😊",
-    "Berbaktilah kepada orang tua selagi mereka ada. Ridha Allah SWT terletak pada ridha mereka. Sudahkah kamu menelepon mereka hari ini? 📞",
-    "Jangan biarkan kesibukan dunia melupakanmu dari tujuan akhirmu: Surga. Mari seimbangkan dunia dan akhirat kita. ⚖️",
-    "Mari kita perbanyak shalawat hari ini. Semoga kita semua mendapatkan syafaat dari Rasulullah SAW di hari akhir kelak. Allahumma shalli 'ala sayyidina Muhammad. ❤️",
-    "Saat adzan berkumandang, tinggalkan sejenak urusan duniamu. Panggilan itu lebih penting dari panggilan mana pun. Yuk, siapkan diri. 🙏",
-    "Al-Kahfi di hari Jumat adalah cahaya di antara dua Jumat. Jangan lupa membacanya atau mendengarkannya nanti ya. ✨"
-];
-
-
 
 // --- BANK KOTA UNTUK VALIDASI (VERSI LENGKAP SELURUH INDONESIA) ---
 const KOTA_VALID = new Set([
@@ -295,7 +191,99 @@ Gunakan nama kota atau kabupaten dari daftar di bawah ini untuk hasil yang akura
 > © MUADZIN BOT`;
 
 
+// --- BANK DOA & HARAPAN BAIK (100 PESAN PENYEMANGAT) ---
+const DOA_HARIAN = [
+    // Semangat & Motivasi
+    "Jangan takut melangkah hari ini. Setiap langkahmu, sekecil apa pun, adalah bagian dari perjalanan hebat. Semoga Allah SWT mudahkan. Semangat! 🔥",
+    "Jika kamu merasa lelah, ingatlah bahwa istirahat adalah bagian dari perjuangan. Pejamkan matamu sejenak, berdoa, lalu lanjutkan dengan kekuatan baru. Kamu bisa! 💪",
+    "Kegagalan hari ini adalah pelajaran untuk kemenangan esok hari. Jangan menyerah, terus perbaiki diri. Kamu lebih kuat dari yang kamu kira! 🚀",
+    "Waktu terus berjalan. Manfaatkan setiap detiknya untuk hal yang mendekatkanmu pada-Nya dan pada impianmu. Waktumu berharga! ⏳",
+    "Semangat kerjanya! Niatkan setiap usahamu sebagai ibadah, maka lelahmu akan menjadi pahala yang tak terhingga. Bismillah! 💼",
+    "Cita-citamu besar? Bagus! Iringi dengan doa yang besar dan usaha yang tak kalah besar. Allah SWT Maha Mendengar. 🎯",
+    "Hari esok masih misteri. Hari kemarin adalah kenangan. Hari ini adalah anugerah. Lakukan yang terbaik di hari ini! 🎁",
+    "Setiap ujian yang datang tidak pernah melebihi batas kemampuanmu. Allah SWT tahu kamu kuat. Hadapi dengan sabar dan sholat. 🙏",
+    "Jangan biarkan keraguan menghentikanmu. Ucapkan 'Bismillah', lalu langkahkan kakimu. Allah SWT akan membuka jalan bagi mereka yang berusaha. ✨",
+    "Ingat, kamu tidak harus menjadi hebat untuk memulai, tapi kamu harus memulai untuk menjadi hebat. Langkah pertama hari ini adalah kuncinya. 🔑",
+    "Energi pagimu menentukan sisa harimu. Buka hari dengan doa dan optimisme, insyaAllah hasilnya akan luar biasa. Kamu siap? 🔥",
+    "Saat kamu merasa ingin menyerah, ingat kembali alasan mengapa kamu memulai. Tujuanmu lebih besar dari rintanganmu saat ini. Terus maju! 🚶‍♂️🚶‍♀️",
+    "Kesalahan bukan akhir dari segalanya, melainkan guru terbaik. Belajar, bangkit, dan jadilah versi dirimu yang lebih baik hari ini. 🌱",
+    "Fokus pada kemajuan, bukan kesempurnaan. Setiap progres, sekecil apapun, layak untuk dirayakan. Kamu sudah melakukan yang terbaik! 🏆",
+    "Dunia mungkin tidak selalu adil, tapi usaha dan doa tidak pernah sia-sia di mata Allah SWT. Teruslah berjuang dengan cara yang baik. 💖",
+    "Ubah 'aku tidak bisa' menjadi 'aku akan coba'. Kekuatan pikiran dan doa bisa memindahkan gunung. Yakinlah! ⛰️",
+    "Untuk setiap pintu yang tertutup, percayalah Allah SWT telah menyiapkan pintu lain yang lebih baik untukmu. Jangan berhenti mencari. 🚪",
+    "Jangan menunggu motivasi datang, ciptakan motivasimu sendiri. Mulai dari hal kecil, selesaikan, dan rasakan kepuasannya. Lanjutkan! ✨",
+    "Jadilah produktif, bukan hanya sibuk. Tentukan prioritasmu hari ini dan fokuslah pada hal yang benar-benar penting. Kamu pasti bisa! ✅",
+    "Kekuatan terbesar ada setelah kamu berhasil melewati kelemahan terbesarmu. Hadapi tantangan hari ini, kamu akan jadi lebih kuat. 💪",
+    "Pernahkah kamu berhenti sejenak hanya untuk bersyukur atas nafas hari ini? Alhamdulillah... Semoga sisa harimu dipenuhi ketenangan. 🙏",
+    "Rezeki bukan hanya soal materi, tapi juga teman yang baik dan hati yang damai. Semoga hari ini kita dikelilingi oleh keduanya. Aamiin. 🌿",
+    "Jangan bandingkan dirimu dengan orang lain. Bunga mawar dan matahari tidak bisa dibandingkan, keduanya indah dengan caranya sendiri. Begitu juga kamu. 🌷",
+    "Saat semua terasa berat, coba lihat ke atas. Ada Allah SWT yang Maha Besar. Masalahmu tidak ada apa-apanya bagi-Nya. Mintalah pertolongan. ✨",
+    "Lihat sekelilingmu. Ada begitu banyak nikmat kecil yang sering terlupakan. Udara yang kita hirup, air yang kita minum. Alhamdulillah 'ala kulli haal. 💨",
+    "Jangan menunggu bahagia untuk bersyukur, tapi bersyukurlah, maka kebahagiaan akan datang menghampirimu. Kuncinya adalah syukur. 😊",
+    "Ucapkanlah 'Alhamdulillah' setidaknya 5 kali sekarang. Rasakan getaran syukurnya di dalam hati. Nikmat mana lagi yang kau dustakan? 💖",
+    "Terkadang Allah SWT menahan sesuatu darimu bukan untuk menghukum, tapi untuk melindungimu. Ucapkan Alhamdulillah atas apa yang tidak kamu miliki. 🙏",
+    "Hidup ini singkat. Jangan habiskan dengan keluhan. Habiskan dengan syukur, doa, dan usaha untuk menjadi lebih baik. ⏳",
+    "Setiap pagi adalah halaman baru dalam buku kehidupanmu. Tulislah cerita yang indah hari ini, dimulai dengan rasa syukur. 📖",
+    "Sudahkah kamu berterima kasih pada dirimu sendiri hari ini? Terima kasih telah bertahan, berjuang, dan tidak menyerah. Kamu hebat! 🤗",
+    "Melihat ke atas untuk motivasi, melihat ke bawah untuk bersyukur. Keseimbangan ini akan membuat hatimu selalu damai. ⚖️",
+    "Nikmat sehat adalah mahkota di kepala orang sehat yang hanya bisa dilihat oleh orang sakit. Syukuri sehatmu hari ini. 💚",
+    "Jangan terlalu khawatirkan masa depan hingga lupa mensyukuri hari ini. Hari ini adalah anugerah nyata yang ada di tanganmu. ✨",
+    "Semakin banyak kamu bersyukur, semakin banyak hal yang akan datang untuk kamu syukuri. Jadikan syukur sebagai kebiasaanmu. 🌿",
+    "Saat kamu merasa tidak punya apa-apa, ingatlah kamu punya Allah SWT. Dan itu sudah lebih dari cukup. Alhamdulillah. ❤️",
+    "Mungkin doamu belum terkabul, tapi lihatlah berapa banyak nikmat yang Allah SWT berikan tanpa kamu minta. Dia Maha Tahu yang terbaik. 🙏",
+    "Harta yang paling berharga adalah keluarga yang hangat dan teman yang tulus. Syukuri kehadiran mereka dalam hidupmu. 👨‍👩‍👧‍👦",
+    "Kesulitan adalah cara Allah SWT memberitahu bahwa kamu sedang dirindukan dalam sujud dan doamu. Dekati Dia. ✨",
+    "Satu tarikan nafas adalah anugerah. Gunakan ia untuk berdzikir, memuji nama-Nya. Subhanallah, Walhamdulillah, Walaa Ilaha Illallah, Wallahu Akbar. 💨",
+    "Satu kebaikan kecil hari ini bisa menjadi alasan senyum orang lain. Sudahkah kamu berbagi kebaikan hari ini? Yuk, tebar senyum! 😄",
+    "Apapun yang sedang kamu hadapi, ingatlah: 'Laa tahzan, innallaha ma'ana' (Jangan bersedih, sesungguhnya Allah SWT beserta kita). Kamu tidak sendirian. ❤️",
+    "Tersenyumlah! Senyummu adalah sedekah termudah, obat terbaik untuk dirimu sendiri, dan cahaya bagi orang di sekitarmu. Coba sekarang! 😊",
+    "Jika ada yang menyakitimu, balaslah dengan doa. Mendoakan kebaikan untuk orang lain adalah cara terbaik membersihkan hati. 💖",
+    "Sudahkah kamu memaafkan seseorang hari ini? Memaafkan membebaskan dua jiwa: jiwamu dan jiwa orang itu. Hati yang lapang adalah sumber kebahagiaan. 🤗",
+    "Semoga hari ini, kita lebih banyak mendengar daripada berbicara, lebih banyak memberi daripada meminta, dan lebih banyak bersyukur daripada mengeluh. Aamiin. 🌿",
+    "Jadilah seperti akar, tak terlihat namun menjadi sumber kekuatan bagi pohon untuk tumbuh tinggi. Ikhlaslah dalam setiap kebaikan. 🌳",
+    "Semoga kita dijauhkan dari sifat sombong dan iri hati. Semoga hati kita selalu bersih dan dipenuhi kasih sayang. Aamiin. 🕊️",
+    "Kebaikan itu menular. Mulailah dari dirimu, dan lihat bagaimana energi positif itu menyebar ke sekelilingmu. ✨",
+    "Jadilah pribadi yang pemaaf. Dendam itu berat, hanya akan membebani langkahmu. Memaafkan itu ringan dan melapangkan. 🎈",
+    "Saat kamu merasa sendirian, ingatlah Allah SWT sedang memberimu kesempatan untuk berbicara hanya dengan-Nya. Manfaatkan momen itu. 🌙",
+    "Ketenangan sejati bukan saat tidak ada masalah, tapi saat hatimu tetap terhubung dengan Allah SWT di tengah badai masalah. 🙏",
+    "Jangan biarkan perlakuan buruk orang lain merusak kedamaian hatimu. Balas dengan diam, doa, dan kebaikan. Kamu lebih mulia. ✨",
+    "Menjadi orang baik tidak menjamin semua orang akan menyukaimu, tapi itu menjamin Allah SWT akan menyukaimu. Dan itu yang terpenting. ❤️",
+    "Hati yang tenang adalah istana termewah. Jagalah ia dari pikiran negatif dan prasangka buruk. Hiasi dengan dzikir. 👑",
+    "Bantu orang lain tanpa pamrih, maka Allah SWT akan membantumu dari arah yang tak terduga. Tangan di atas lebih baik dari tangan di bawah. 🤝",
+    "Hindari perdebatan yang tidak perlu. Mengalah bukan berarti kalah, terkadang itu adalah kemenangan untuk kedamaian hatimu. 🤫",
+    "Bicara yang baik atau diam. Lisanmu mencerminkan hatimu. Semoga lisan kita selalu basah karena dzikir dan kata-kata yang menyejukkan. 💬",
+    "Setiap jiwa butuh ketenangan. Temukan ketenanganmu dalam sholat, dalam Al-Qur'an, dan dalam mengingat-Nya. 💖",
+    "Sebarkan salam. 'Assalamualaikum' bukan hanya sapaan, tapi doa. Semoga keselamatan, rahmat, dan berkah-Nya menyertaimu. 🙏",
+    "Semoga makanan yang kamu nikmati hari ini menjadi sumber energi untuk beribadah dan berbuat baik. Jangan lupa Bismillah. 🍽️",
+    "Semoga setiap tetes keringat yang jatuh dalam usahamu mencari rezeki halal, menjadi saksi perjuanganmu di hadapan-Nya kelak. Aamiin. 💧",
+    "Satu sedekah kecil di pagi hari bisa menolak bala dan membuka pintu rezeki. Sudahkah kamu bersedekah hari ini? 💸",
+    "Semoga Allah SWT selalu menuntun langkah kita ke tempat-tempat yang baik, bertemu orang-orang yang baik, dan melakukan hal-hal yang baik. 🚶‍♂️🚶‍♀️",
+    "Ya Allah, cukupkan kebutuhan kami, lapangkan rezeki kami, dan berkahi setiap apa yang kami miliki. Aamiin Ya Rabbal Alamin. ✨",
+    "Pintu rezeki bukan hanya dari bekerja, tapi juga dari bakti pada orang tua, dari silaturahmi, dan dari sedekah. Mari kita buka semua pintunya. 🚪",
+    "Jangan khawatirkan rezekimu. Ia sudah diatur dan tidak akan pernah tertukar. Khawatirkan amalanmu, karena itu bekalmu. 🙏",
+    "Jika Allah SWT menahan rezekimu, mungkin Dia ingin memberimu yang lebih baik di waktu yang tepat. Teruslah berprasangka baik dan berusaha. ✨",
+    "Kunci rezeki yang paling ampuh adalah sholat tepat waktu dan istighfar. Mari kita amalkan keduanya hari ini. 🔑",
+    "Ya Allah, kami memohon kepada-Mu ilmu yang bermanfaat, rezeki yang baik, dan amal yang diterima. Aamiin. 🤲",
+    "Rezeki yang paling nikmat adalah saat ia menjadi jalan untuk kita lebih banyak beribadah dan membantu sesama. Semoga rezeki kita berkah. 🌿",
+    "Jangan hanya mengejar dunia, nanti kamu lelah. Libatkan Allah SWT, maka dunia yang akan mengejarmu. Bismillah. 🚀",
+    "Setiap makhluk hidup di bumi sudah dijamin rezekinya. Tugas kita hanya menjemputnya dengan cara yang halal dan diridhai-Nya. 🐾",
+    "Mengeluh tidak akan menambah rezekimu, tapi bersyukur akan mengundangnya datang. Yuk, ganti keluhan dengan Alhamdulillah. 😊",
+    "Kadang kemudahan datang setelah kita memudahkan urusan orang lain. Mari saling membantu hari ini. 🤝",
+    "Ya Allah, jauhkan kami dari hutang yang memberatkan dan rezeki yang haram. Berikan kami kecukupan dan keberkahan. Aamiin. 🙏",
+    "Jangan lupa istighfar. Mungkin ada pintu rezeki yang tertahan karena dosa kecil yang tak kita sadari. Astaghfirullahaladzim...",
+    "Sebuah pengingat lembut: Sudahkah kamu mendoakan kedua orang tuamu hari ini? Mereka adalah sumber keberkahan terbesarmu. 🤲",
+    "Satu ayat Al-Qur'an yang dibaca dengan tulus bisa menenangkan hati yang paling gelisah. Sudahkah kamu menyapa Kalam-Nya hari ini? 📖",
+    "Ingat, sholat bukan hanya kewajiban, tapi kebutuhan. Itu adalah waktu istirahatmu bersama Sang Pencipta. Nikmatilah setiap gerakannya. 🙏",
+    "Pengingat sholat Dhuha: Dua rakaat di pagi hari sebagai tanda syukur, insyaAllah membuka pintu-pintu rezeki. Sudahkah kamu? 😊",
+    "Berbaktilah kepada orang tua selagi mereka ada. Ridha Allah SWT terletak pada ridha mereka. Sudahkah kamu menelepon mereka hari ini? 📞",
+    "Jangan biarkan kesibukan dunia melupakanmu dari tujuan akhirmu: Surga. Mari seimbangkan dunia dan akhirat kita. ⚖️",
+    "Mari kita perbanyak shalawat hari ini. Semoga kita semua mendapatkan syafaat dari Rasulullah SAW di hari akhir kelak. Allahumma shalli 'ala sayyidina Muhammad. ❤️",
+    "Saat adzan berkumandang, tinggalkan sejenak urusan duniamu. Panggilan itu lebih penting dari panggilan mana pun. Yuk, siapkan diri. 🙏",
+    "Al-Kahfi di hari Jumat adalah cahaya di antara dua Jumat. Jangan lupa membacanya atau mendengarkannya nanti ya. ✨"
+];
 
+// --- TEKS-TEKS ---
+const KOTA_LIST_TEXT = `ℹ️ Untuk melihat jadwal sholat, silakan ketik nama kota atau kabupaten di Indonesia secara langsung.\n\nContoh: \`/jadwal Jakarta\` atau \`/jadwal Bandung\``;
 
 const DZIKIR_PAGI_TEXT = `*☀️ WAKTUNYA DZIKIR PAGI*
 
@@ -330,10 +318,7 @@ maka tidak ada sesuatu pun yang akan membahayakannya hingga ia pergi dari tempat
 
 Semoga kita semua selalu dalam lindungan-Nya. 🙏\n\n> © MUADZIN BOT`;
 
-
-const PANDUAN_TEXT = `📖 *PANDUAN PENGGUNAAN MUADZIN BOT* 
-
-1️⃣ *Melihat Jadwal Sholat*
+const PANDUAN_TEXT = `📖 *PANDUAN PENGGUNAAN MUADZIN BOT* 1️⃣ *Melihat Jadwal Sholat*
 Ketik \`/jadwal\` untuk melihat jadwal sholat di kota yang telah kamu atur.
 Untuk melihat jadwal di kota lain, ketik \`/jadwal Nama Kota\`.
 > Contoh: \`/jadwal Pekanbaru\`
@@ -358,24 +343,19 @@ Gunakan perintah \`/infobot\`, \`/kota\`, \`/donasi\`, atau \`/owner\` untuk inf
 💫 *SUKA BOT INI?*
 Silakan share bot ini kesemua kenalan kamu agar mendapatkan manfaatnya juga dan Dukung bot ini dengan berdonasi melalui perintah \`/donasi\`.\n\n> © MUADZIN BOT`;
 
-const DONASI_TEXT = `💝 *DUKUNG MUADZIN BOT* 
-
-Terima kasih sudah berdonasi untuk mendukung bot ini! Setiap dukungan darimu sangat berarti agar bot bisa terus aktif dan dikembangkan dengan fitur-fitur baru.
+const DONASI_TEXT = `💝 *DUKUNG MUADZIN BOT* Terima kasih sudah berdonasi untuk mendukung bot ini! Setiap dukungan darimu sangat berarti agar bot bisa terus aktif dan dikembangkan dengan fitur-fitur baru.
 
 Kamu bisa memberikan donasi melalui QRIS di atas dengan menggunakan dompet digital atau Mobile Banking yang kamu miliki.
 
 Terima kasih banyak atas kebaikanmu, semoga Allah SWT SWT melipat gandakan rezekimu! ✨\n\n> © MUADZIN BOT`;
 
-const OWNER_TEXT = `👨‍💻 *INFORMASI OWNER* 
-
-Bot ini dibuat dan dikelola oleh ARH [@arhverse] x NUSA KARSA [nusakarsa.id]. Jika kamu menemukan bug, punya saran, atau butuh bantuan, silakan hubungi owner.
+const OWNER_TEXT = `👨‍💻 *INFORMASI OWNER* Bot ini dibuat dan dikelola oleh ARH [@arhverse] x NUSA KARSA [nusakarsa.id]. Jika kamu menemukan bug, punya saran, atau butuh bantuan, silakan hubungi owner.
 
 💬 *WhatsApp:* wa.me/${OWNER_NUMBER}
 
 Mohon untuk tidak melakukan spam atau panggilan telepon ya. Terima kasih!\n\n> © MUADZIN BOT`;
 
 const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) => {
-    // --- DAFTAR DOA DINAMIS ---
     const dynamicWishes = [
           "Allah SWT selalu melimpahkan rahmat dan berkah-Nya di setiap langkahmu hari ini. 🤲",
   "menjadi awal yang penuh kemudahan dan keberkahan dari Allah SWT. 🤲",
@@ -407,18 +387,10 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
         "senyummu hari ini menjadi pembuka pintu rezeki. 🤲",
         "setiap doamu hari ini diijabah oleh-Nya. 🤲"
     ];
-    // Memilih satu doa secara acak
     const randomWish = dynamicWishes[Math.floor(Math.random() * dynamicWishes.length)];
-
-    // =======================================================
-    // >>> PERUBAHAN LUXON DIMULAI DI SINI <<<
-    // =======================================================
-
-    // Membuat objek waktu yang SUDAH dikonversi ke zona WIB menggunakan Luxon
     const nowInJakarta = DateTime.now().setZone('Asia/Jakarta');
-    const hour = nowInJakarta.hour; // Mengambil jam dari waktu WIB yang sudah benar
+    const hour = nowInJakarta.hour;
     
-    // 1. Menentukan sapaan berdasarkan waktu (logika ini tidak berubah)
     let timeOfDayGreeting = "";
     let timeOfDayEmoji = "";
 
@@ -436,10 +408,8 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
         timeOfDayEmoji = "🌙";
     }
 
-    // 2. Membuat format tanggal lengkap menggunakan Luxon
     const fullDate = nowInJakarta.setLocale('id').toFormat('cccc, dd MMMM yyyy');
 
-    // 3. Menggabungkan sapaan pembuka (logika ini tidak berubah)
     const openingGreeting = isGroup
         ? `Assalamualaikum semuanya! ${timeOfDayGreeting} ${timeOfDayEmoji}`
         : `Assalamualaikum, *${userName}*! ${timeOfDayGreeting} ${timeOfDayEmoji}`;
@@ -447,16 +417,9 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
     const openingWish = `Semoga di hari ${fullDate} ini, ${randomWish}`;
     const openingAction = "Berikut adalah daftar perintah yang bisa kamu gunakan:";
     const finalOpening = `${openingGreeting}\n\n${openingWish}\n\n${openingAction}`;
-
-    // 4. Menyiapkan info waktu server menggunakan Luxon
     const serverTime = nowInJakarta.toFormat('HH:mm:ss');
     const timeZoneString = `GMT+07:00 (WIB)`;
     
-    // =======================================================
-    // >>> PERUBAHAN LUXON SELESAI DI SINI <<<
-    // =======================================================
-    
-    // 5. Mengembalikan seluruh teks menu (bagian ini tidak berubah)
     return (
         `${finalOpening}\n\n` +
         "*📖 MENU UTAMA*\n" +
@@ -467,7 +430,7 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
         " `/randomayat` - Random Ayat Al Qur'an\n\n" +
         "*ℹ️ BANTUAN & INFO*\n" +
         " `/infobot` - Lihat status dan info bot\n" +
-        " `/kota` - Lihat daftar kota\n" +
+        " `/kota` - Info nama kota\n" +
         " `/panduan` - Informasi & Cara penggunaan bot\n" +
         " `/donasi` - Dukung pengembangan bot\n" +
         " `/owner` - Hubungi pemilik bot\n\n\n" +
@@ -475,8 +438,6 @@ const generateMenuText = (userName, totalPersonal, totalGroup, isGroup = false) 
         "> © MUADZIN BOT"
     );
 };
-
-
 
 // --- FUNGSI-FUNGSI UTILITAS ---
 
@@ -507,42 +468,30 @@ async function fetchPrayerTimes(city, date = new Date()) {
     const formattedDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
     try {
         const response = await axios.get(`http://api.aladhan.com/v1/timingsByCity/${formattedDate}`, {
-            params: { 
-                city: city, 
-                country: "Indonesia", 
-                method: 11 // Kemenag RI
-            }
+            params: { city: city, country: "Indonesia", method: 11 }
         });
         
-        // --- VALIDASI KETAT DIMULAI DI SINI ---
-
-        // Cek 1: Pastikan API memberikan respons sukses.
         if (!response.data || response.data.code !== 200) {
-            console.log(`[VALIDASI GAGAL] API tidak merespons dengan baik untuk kota: ${city}`);
+            console.log(`[API GAGAL] API tidak merespons dengan baik untuk kota: ${city}`);
             return null; 
         }
 
-        // Cek 2: Pastikan ada objek 'data' dan 'meta' di dalam respons.
         const responseData = response.data.data;
         if (!responseData || !responseData.meta || !responseData.timings) {
-            console.log(`[VALIDASI GAGAL] Respons API tidak lengkap untuk kota: ${city}`);
+            console.log(`[API GAGAL] Respons API tidak lengkap untuk kota: ${city}`);
             return null;
         }
 
-        // Cek 3: Pastikan zona waktu adalah zona waktu valid di Indonesia.
         const validTimezones = ['Asia/Jakarta', 'Asia/Pontianak', 'Asia/Makassar', 'Asia/Jayapura'];
         if (!validTimezones.includes(responseData.meta.timezone)) {
-            console.log(`[VALIDASI GAGAL] Zona waktu tidak valid (${responseData.meta.timezone}) untuk kota: ${city}`);
+            console.log(`[API GAGAL] Zona waktu tidak valid (${responseData.meta.timezone}) untuk kota: ${city}`);
             return null;
         }
 
-        // Jika semua Cek lolos, kota dianggap valid.
         return responseData;
 
     } catch (error) {
-        // Jika API mengembalikan error (misal: 404 Not Found untuk kota aneh),
-        // blok ini akan menangkapnya dan mengembalikan null.
-        console.log(`[API ERROR] Panggilan API gagal untuk kota: "${city}". Pesan: ${error.message}`);
+        console.log(`[API ERROR] Panggilan API gagal untuk kota: "${city}". Ini mungkin karena nama kota salah.`);
         return null;
     }
 }
@@ -559,9 +508,7 @@ function formatUptime(startTime) {
     return `${days} hari, ${hours} jam, ${minutes} menit, ${seconds} detik`;
 }
 
-
 function calculateCountdown(timings) {
-    // Menggunakan Luxon untuk mendapatkan waktu saat ini di zona WIB
     const nowInJakarta = DateTime.now().setZone('Asia/Jakarta');
     const prayerOrder = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
     let nextPrayerName = null;
@@ -572,10 +519,8 @@ function calculateCountdown(timings) {
         if (!prayerTimeStr) continue;
 
         const [hour, minute] = prayerTimeStr.split(':');
-        // Membuat objek waktu sholat di zona WIB juga
         let prayerDateTime = nowInJakarta.set({ hour: parseInt(hour), minute: parseInt(minute), second: 0, millisecond: 0 });
 
-        // Perbandingan sekarang akurat karena keduanya dalam zona waktu yang sama
         if (prayerDateTime > nowInJakarta) {
             nextPrayerName = prayerName;
             nextPrayerTime = prayerDateTime;
@@ -583,22 +528,19 @@ function calculateCountdown(timings) {
         }
     }
 
-    // Jika sudah melewati Isya, sholat berikutnya adalah Subuh besok
     if (!nextPrayerName) {
         nextPrayerName = 'Fajr';
         const [hour, minute] = timings.Fajr.split(':');
         nextPrayerTime = nowInJakarta.plus({ days: 1 }).set({ hour: parseInt(hour), minute: parseInt(minute), second: 0, millisecond: 0 });
     }
 
-    // Menggunakan Luxon untuk menghitung selisih waktu
     const diff = nextPrayerTime.diff(nowInJakarta, ['hours', 'minutes']).toObject();
-    const hours = Math.floor(diff.hours);
-    const minutes = Math.floor(diff.minutes);
+    const hours = Math.floor(diff.hours || 0);
+    const minutes = Math.floor(diff.minutes || 0);
     
     const translatedPrayerName = PRAYER_NAMES_MAP[nextPrayerName] || nextPrayerName;
     return `⏳ *${hours} jam ${minutes} menit* lagi menuju sholat *${translatedPrayerName}*`;
 }
-
 
 async function sendDailyVerse(sock, jid, isScheduled = false) {
     try {
@@ -606,33 +548,25 @@ async function sendDailyVerse(sock, jid, isScheduled = false) {
             await sock.sendMessage(jid, { text: "📖 Tunggu sebentar, sedang mencari ayat untukmu..." });
         }
         const randomAyat = Math.floor(Math.random() * 6236) + 1;
-        
-        // PERUBAHAN 1: Menambahkan 'en.transliteration' ke dalam panggilan API
         const response = await axios.get(`https://api.alquran.cloud/v1/ayah/${randomAyat}/editions/quran-uthmani,id.indonesian,ar.alafasy,en.transliteration`);
         const data = response.data.data;
 
-        // Mengambil semua data yang kita butuhkan
         const arabicData = data.find(d => d.edition.identifier === 'quran-uthmani');
         const indonesianData = data.find(d => d.edition.identifier === 'id.indonesian');
         const audioData = data.find(d => d.edition.identifier === 'ar.alafasy');
         const transliterationData = data.find(d => d.edition.identifier === 'en.transliteration');
 
-        // Memastikan semua data berhasil didapatkan
         if (!arabicData || !indonesianData || !audioData || !transliterationData) {
-             throw new Error("Data dari API tidak lengkap (mungkin transliterasi gagal didapat).");
+             throw new Error("Data dari API Al-Qur'an tidak lengkap.");
         }
 
-        const arabicText = arabicData.text;
-        const translationText = indonesianData.text;
-        const transliterationText = transliterationData.text; // Data baru
-        const surahName = arabicData.surah.name;
-        const surahNumber = arabicData.surah.number;
-        const ayatNumber = arabicData.numberInSurah;
-        const audioUrl = audioData.audio;
+        const { text: arabicText, surah, numberInSurah } = arabicData;
+        const { text: translationText } = indonesianData;
+        const { text: transliterationText } = transliterationData;
+        const { audio: audioUrl } = audioData;
 
-        // PERUBAHAN 2: Menyusun ulang format pesan untuk menyertakan teks Latin
         const message = `*✨ AYAT AL-QUR'AN UNTUKMU HARI INI*\n\n` +
-                        `*${surahName} (${surahNumber}:${ayatNumber})*\n\n` +
+                        `*${surah.name} (${surah.number}:${numberInSurah})*\n\n` +
                         `*${arabicText}*\n\n` +
                         `*Bacaan Latin:*\n` +
                         `_${transliterationText}_\n\n` +
@@ -641,11 +575,7 @@ async function sendDailyVerse(sock, jid, isScheduled = false) {
                         `Semoga menjadi pengingat yang bermanfaat 😊✨\n\n> © MUADZIN BOT`;
 
         await sock.sendMessage(jid, { text: message });
-        await sock.sendMessage(jid, { 
-            audio: { url: audioUrl },
-            ptt: true,
-            mimetype: 'audio/mpeg'
-        });
+        await sock.sendMessage(jid, { audio: { url: audioUrl }, ptt: true, mimetype: 'audio/mpeg' });
 
         const stickerPath = './stickers/bacaquran.webp';
         if (fs.existsSync(stickerPath)) {
@@ -659,33 +589,27 @@ async function sendDailyVerse(sock, jid, isScheduled = false) {
     }
 }
 
-
 async function sendAlKahfiReminder(sock, jid) {
     try {
         const surah = 18;
-        const ayat = Math.floor(Math.random() * 110) + 1; 
-        
-        // PERUBAHAN 1: Menambahkan 'en.transliteration' ke dalam panggilan API
+        const ayat = Math.floor(Math.random() * 110) + 1;
         const response = await axios.get(`https://api.alquran.cloud/v1/ayah/${surah}:${ayat}/editions/quran-uthmani,id.indonesian,ar.alafasy,en.transliteration`);
         const data = response.data.data;
 
-        // Mengambil semua data yang kita butuhkan
         const arabicData = data.find(d => d.edition.identifier === 'quran-uthmani');
         const indonesianData = data.find(d => d.edition.identifier === 'id.indonesian');
         const audioData = data.find(d => d.edition.identifier === 'ar.alafasy');
         const transliterationData = data.find(d => d.edition.identifier === 'en.transliteration');
 
-        // Memastikan semua data berhasil didapatkan
         if (!arabicData || !indonesianData || !audioData || !transliterationData) {
              throw new Error("Data Al-Kahfi dari API tidak lengkap.");
         }
 
-        const arabicText = arabicData.text;
-        const translationText = indonesianData.text;
-        const transliterationText = transliterationData.text; // Data baru
-        const audioUrl = audioData.audio;
+        const { text: arabicText } = arabicData;
+        const { text: translationText } = indonesianData;
+        const { text: transliterationText } = transliterationData;
+        const { audio: audioUrl } = audioData;
 
-        // PERUBAHAN 2: Menyusun ulang format pesan untuk menyertakan teks Latin
         const message = `*✨ JUM'AT MUBARAK - WAKTUNYA AL-KAHFI*\n\n` +
                         `_Dari Abu Sa’id Al-Khudri radhiyallahu ‘anhu, Nabi shallallahu ‘alaihi wa sallam bersabda:_\n` +
                         `_"Barangsiapa membaca surat Al-Kahfi pada hari Jum’at, maka ia akan disinari oleh cahaya di antara dua Jum’at."_\n\n` +
@@ -697,11 +621,7 @@ async function sendAlKahfiReminder(sock, jid) {
                         `_"${translationText}"_\n\n\n> © MUADZIN BOT`;
 
         await sock.sendMessage(jid, { text: message });
-        await sock.sendMessage(jid, { 
-            audio: { url: audioUrl },
-            ptt: true,
-            mimetype: 'audio/mpeg'
-        });
+        await sock.sendMessage(jid, { audio: { url: audioUrl }, ptt: true, mimetype: 'audio/mpeg' });
 
         const stickerPath = './stickers/alkahfi.webp';
         if (fs.existsSync(stickerPath)) {
@@ -711,8 +631,6 @@ async function sendAlKahfiReminder(sock, jid) {
         console.error("[ERROR] Gagal mengirim pengingat Al-Kahfi:", error.message);
     }
 }
-
-
 
 async function sendPrayerNotification(sock, jid, prayer, time, city, userName, timings) {
     try {
@@ -739,11 +657,7 @@ async function sendPrayerNotification(sock, jid, prayer, time, city, userName, t
             const regularAzanUrl = 'https://cdn.aladhan.com/audio/adhans/a1.mp3';
             const azanAudioUrl = (prayer === 'Fajr') ? fajrAzanUrl : regularAzanUrl;
             
-            await sock.sendMessage(jid, {
-                audio: { url: azanAudioUrl },
-                ptt: true,
-                mimetype: 'audio/mpeg'
-            });
+            await sock.sendMessage(jid, { audio: { url: azanAudioUrl }, ptt: true, mimetype: 'audio/mpeg' });
 
         } catch (audioError) {
             console.error(`[ERROR] Gagal mengirim audio Azan ke ${jid}:`, audioError);
@@ -771,79 +685,126 @@ async function sendDzikir(sock, jid, type) {
     }
 }
 
-
 async function scheduleRemindersForUser(sock, jid, city, userName) {
-    if (scheduledJobs[jid]) scheduledJobs[jid].forEach(job => job.cancel());
+    if (scheduledJobs[jid]) {
+        scheduledJobs[jid].forEach(job => job.cancel());
+    }
     scheduledJobs[jid] = [];
 
     const prayerData = await fetchPrayerTimes(city);
-    if (!prayerData || !prayerData.timings) return;
-    const timings = prayerData.timings;
-
-    console.log(`[JADWAL] Mengatur alarm untuk ${jid} di kota ${city}`);
-    for (const [prayer, time] of Object.entries(timings)) {
+    if (!prayerData || !prayerData.timings) {
+        console.log(`[JADWAL GAGAL] Tidak bisa mendapatkan data jadwal untuk ${city}`);
+        return;
+    }
+    
+    console.log(`[JADWAL] Mengatur pengingat untuk ${jid} di kota ${city}`);
+    for (const [prayer, time] of Object.entries(prayerData.timings)) {
         if (['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].includes(prayer)) {
             const [hour, minute] = time.split(':');
             const rule = new schedule.RecurrenceRule();
             rule.hour = parseInt(hour);
             rule.minute = parseInt(minute);
-            rule.tz = 'Asia/Jakarta';
+            rule.tz = 'Asia/Jakarta'; // PENTING: Menjalankan jadwal sesuai waktu WIB
 
             const job = schedule.scheduleJob(rule, async () => {
                 const currentSubscriber = subscribers[jid];
-                const currentUserName = currentSubscriber ? currentSubscriber.name : 'Kawan';
+                if (!currentSubscriber) {
+                    job.cancel();
+                    return;
+                }
+                const currentUserName = currentSubscriber.name || 'Kawan';
                 const freshPrayerData = await fetchPrayerTimes(city);
                 if(freshPrayerData && freshPrayerData.timings) {
                     await sendPrayerNotification(sock, jid, prayer, time, city, currentUserName, freshPrayerData.timings);
                 }
             });
-            if (job) scheduledJobs[jid].push(job);
+            if (job) {
+                scheduledJobs[jid].push(job);
+            }
         }
     }
 }
 
+
 // --- FUNGSI UTAMA BOT ---
 async function connectToWhatsApp() {
     loadInitialData();
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+    let hasScheduledGlobalJobs = false;
 
+    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
     const sock = makeWASocket({
-        logger: pino({ level: 'info' }), // UBAH 'silent' menjadi 'info'
+        logger: pino({ level: 'info' }),
         auth: state,
-        browser: ['ARHBot', 'Chrome', '18.3.0'],
+        browser: ['MuadzinBot', 'Chrome', '1.0.0'],
         syncFullHistory: false,
-        pairingCode: true // TAMBAHKAN baris ini
+        pairingCode: true
     });
-    
-        // ... bagian sock = makeWASocket({...})
     
     sock.ev.on('creds.update', saveCreds);
 
-    // >>> TAMBAHKAN BLOK KODE DI BAWAH INI <<<
-    sock.ev.on('connection.update', (update) => {
+    sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect, qr } = update;
 
-        if(qr) {
+        if (qr) {
             console.log('------------------------------------------------');
-            console.log('       PAIRING CODE ANDA       ');
-            console.log(`          ${qr.slice(0, 4)} - ${qr.slice(4)}`);
+            console.log('       PAIRING CODE ANDA (GUNAKAN DI WA)       ');
+            qrcode.generate(qr, { small: true });
             console.log('------------------------------------------------');
-            console.log('Scan dengan WhatsApp di HP: Setelan > Perangkat Tertaut > Tautkan dengan nomor telepon.');
+            console.log('Buka WhatsApp di HP > Setelan > Perangkat Tertaut > Tautkan Perangkat.');
         }
 
-        if(connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== 401; // 401 = Pairing Code Expired
-            console.log('Koneksi terputus karena:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
-            
-            if(shouldReconnect) {
+        if (connection === 'close') {
+            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+            console.log('Koneksi terputus:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
+            if (shouldReconnect) {
                 connectToWhatsApp();
             }
-        } else if(connection === 'open') {
-            console.log('✨ Koneksi berhasil tersambung!');
+        } else if (connection === 'open') {
+            console.log('✨ Koneksi berhasil tersambung! Bot siap digunakan.');
+
+            console.log('[JADWAL] Memuat ulang jadwal pengingat untuk semua pelanggan...');
+            for (const jid in subscribers) {
+                await scheduleRemindersForUser(sock, jid, subscribers[jid].city, subscribers[jid].name || 'Kawan');
+            }
+
+            if (!hasScheduledGlobalJobs) {
+                console.log('[JADWAL GLOBAL] Mengatur jadwal Ayat, Doa, Dzikir, dan Al-Kahfi (Waktu WIB)...');
+
+                schedule.scheduleJob({ hour: [12, 18], minute: 40, tz: 'Asia/Jakarta' }, async () => {
+                    console.log(`[INFO] Mengirim Random Ayat berkala...`);
+                    for (const jid in subscribers) {
+                        try { await sendDailyVerse(sock, jid, true); await new Promise(r => setTimeout(r, 500)); } catch (e) { console.error(`[RANDOM AYAT ERROR] Gagal ke ${jid}:`, e.message); }
+                    }
+                });
+
+                schedule.scheduleJob({ hour: [9, 20], minute: 0, tz: 'Asia/Jakarta' }, async () => {
+                    console.log(`[INFO] Mengirim Doa & Harapan Harian...`);
+                    const randomWish = DOA_HARIAN[Math.floor(Math.random() * DOA_HARIAN.length)];
+                    const messageToSend = `*✨ PESAN KEBAIKAN UNTUKMU ✨*\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
+                    for (const jid in subscribers) {
+                        try { await sock.sendMessage(jid, { text: messageToSend }); await new Promise(r => setTimeout(r, 500)); } catch (e) { console.error(`[DOA HARIAN ERROR] Gagal ke ${jid}:`, e.message); }
+                    }
+                });
+
+                schedule.scheduleJob({ hour: 7, minute: 0, tz: 'Asia/Jakarta' }, async () => {
+                    console.log("[INFO] Mengirim Dzikir Pagi...");
+                    for (const jid in subscribers) { await sendDzikir(sock, jid, 'pagi'); await new Promise(r => setTimeout(r, 500)); }
+                });
+
+                schedule.scheduleJob({ hour: 16, minute: 0, tz: 'Asia/Jakarta' }, async () => {
+                    console.log("[INFO] Mengirim Dzikir Petang...");
+                    for (const jid in subscribers) { await sendDzikir(sock, jid, 'petang'); await new Promise(r => setTimeout(r, 500)); }
+                });
+
+                schedule.scheduleJob({ dayOfWeek: 5, hour: 8, minute: 0, tz: 'Asia/Jakarta' }, async () => {
+                    console.log("[INFO] Mengirim pengingat Al-Kahfi...");
+                    for (const jid in subscribers) { await sendAlKahfiReminder(sock, jid); await new Promise(r => setTimeout(r, 500)); }
+                });
+
+                hasScheduledGlobalJobs = true;
+            }
         }
     });
-    // >>> SAMPAI DI SINI <<<
-    
 
     sock.ev.on('group-participants.update', async (update) => {
         const { id, participants, action } = update;
@@ -855,33 +816,29 @@ async function connectToWhatsApp() {
             if (fs.existsSync(welcomeStickerPath)) {
                 await sock.sendMessage(id, { sticker: { url: welcomeStickerPath } });
             }
-            let totalPersonal = 0;
-            let totalGroup = 0;
-            for (const jid of Object.keys(subscribers)) {
-                isJidGroup(jid) ? totalGroup++ : totalPersonal++;
-            }
+            let totalPersonal = Object.keys(subscribers).filter(j => !isJidGroup(j)).length;
+            let totalGroup = Object.keys(subscribers).filter(j => isJidGroup(j)).length;
             await sock.sendMessage(id, { text: generateMenuText("Semua", totalPersonal, totalGroup, true) });
         }
     });
     
-
     sock.ev.on('messages.upsert', async m => {
         const msg = m.messages[0];
-        
-        if (msg.key && msg.key.remoteJid !== 'status@broadcast') {
-            await sock.readMessages([msg.key]);
+        if (!msg.message || msg.key.fromMe || msg.key.remoteJid === 'status@broadcast') {
+            return;
         }
         
-        if (!msg.message || msg.key.fromMe) return;
-
+        await sock.readMessages([msg.key]);
         const from = msg.key.remoteJid;
         
         try {
             if (blockedUsers.has(from)) return;
+            
             const now = Date.now();
             if (!userActivity[from]) userActivity[from] = { timestamps: [] };
             userActivity[from].timestamps.push(now);
             userActivity[from].timestamps = userActivity[from].timestamps.filter(ts => now - ts < SPAM_TIME_LIMIT);
+            
             if (userActivity[from].timestamps.length > SPAM_MESSAGE_LIMIT) {
                 if (!blockedUsers.has(from)) {
                     await sock.sendMessage(from, { text: "Maaf, kamu terdeteksi melakukan spam. Nomor Kamu diblokir. Silakan hubungi owner untuk membuka blokir.\n\n> © MUADZIN BOT" });
@@ -893,54 +850,31 @@ async function connectToWhatsApp() {
             }
 
             const body = msg.message?.conversation || msg.message?.extendedTextMessage?.text || msg.message?.imageMessage?.caption || msg.message?.videoMessage?.caption || "";
-            if (!body && !(msg.message.imageMessage || msg.message.videoMessage)) return;
+            if (!body.trim()) return;
 
             const isGroup = isJidGroup(from);
             const userName = msg.pushName || "Kawan";
 
-                        // --- PENANGANAN STATE INTERAKTIF ---
             if (userState[from]) {
                 const state = userState[from];
-                const userInput = body.trim(); // Contoh input: "kota pekanbaru"
-
-                // --- TAHAP 1: SANITASI INPUT KOTA ---
-                let sanitizedCity = userInput.toLowerCase(); // -> "kota pekanbaru"
+                const userInput = body.trim();
+                let sanitizedCity = userInput.toLowerCase();
                 const prefixesToRemove = ['kota ', 'kabupaten ', 'kab ', 'kotamadya ', 'kota adm. '];
                 
                 for (const prefix of prefixesToRemove) {
                     if (sanitizedCity.startsWith(prefix)) {
-                        sanitizedCity = sanitizedCity.replace(prefix, '').trim(); // -> "pekanbaru"
+                        sanitizedCity = sanitizedCity.replace(prefix, '').trim();
                         break;
                     }
                 }
-                // --- AKHIR TAHAP SANITASI ---
-
-                // Cek jika pengguna mengetik perintah '/kota'
-                if (sanitizedCity === '/kota') {
-                    await sock.sendMessage(from, { text: KOTA_LIST_TEXT });
-                    return; 
-                }
                 
-                // --- TAHAP 2: VALIDASI TERHADAP BANK KOTA ---
-                if (!KOTA_VALID.has(sanitizedCity)) {
-                    const fallbackMessage = `Maaf, kota *"${userInput}"* tidak kami kenali atau tidak ada dalam daftar di server kami 😔\n\nPastikan ejaan sudah benar dan merupakan kota/kabupaten di Indonesia.\n\nKetik \`/kota\` untuk melihat beberapa contoh kota yang didukung.\n\n> © MUADZIN BOT`;
-                    await sock.sendMessage(from, { text: fallbackMessage });
-                    return; 
-                }
-                // --- AKHIR TAHAP VALIDASI ---
-
-                // --- TAHAP 3: FORMATTING NAMA KOTA ---
-                // Mengubah "pekanbaru" menjadi "Pekanbaru"
-                const finalCityName = sanitizedCity.charAt(0).toUpperCase() + sanitizedCity.slice(1);
-                // --- AKHIR TAHAP FORMATTING ---
+                const finalCityName = sanitizedCity.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
                 await sock.sendMessage(from, { text: `Mencari data untuk *${finalCityName}*...` });
                 const validCityData = await fetchPrayerTimes(finalCityName);
 
                 if (validCityData) {
                     const subscriberName = isGroup ? (await sock.groupMetadata(from)).subject : userName;
-                    
-                    // SIMPAN NAMA KOTA YANG SUDAH BERSIH DAN DIFORMAT
                     subscribers[from] = { city: finalCityName, name: subscriberName };
                     saveData(SUBSCRIBERS_FILE, subscribers);
                     
@@ -948,17 +882,14 @@ async function connectToWhatsApp() {
                         const successMessage = `✅ Alhamdulillah, langganan pengingat berhasil diaktifkan!\n\n${isGroup ? 'Grup ini' : 'Kamu'} akan menerima pengingat waktu sholat untuk wilayah *${finalCityName}*.\n\nSenang sekali bisa menjadi teman pengingat sholatmu, semoga niat baikmu untuk sholat tepat waktu ini dicatat sebagai amal kebaikan oleh Allah SWT. InsyaAllah, aku akan tepati janji untuk selalu mengingatkanmu 😊🙏\n\n_Jika ingin mengganti lokasi, kamu bisa menggunakan perintah \`/gantilokasi\`_\n\n> © MUADZIN BOT`;
                         await sock.sendMessage(from, { text: successMessage }, { quoted: msg });
                         
-                        // --- NOTIFIKASI KE OWNER (SUBSCRIBE) ---
                         try {
                             const totalSubscribers = Object.keys(subscribers).length;
                             const ownerJid = `${OWNER_NUMBER}@s.whatsapp.net`;
                             const notifMessage = `🔔 *LANGGANAN BARU*\n\nAlhamdulillah ada user yang baru saja berlangganan, berikut detail nya:\n\n> 👤 *Nama:* ${subscriberName}\n> 📞 *Nomor:* ${from.split('@')[0]}\n> 🏙️ *Kota:* ${finalCityName}\n> 📊 *Total Pelanggan Saat Ini:* ${totalSubscribers}\n\n> © MUADZIN BOT`;
                             await sock.sendMessage(ownerJid, { text: notifMessage });
                         } catch (e) {
-                            console.error("[OWNER NOTIF ERROR] Gagal mengirim notifikasi subscribe ke owner:", e);
+                            console.error("[OWNER NOTIF ERROR] Gagal mengirim notifikasi:", e);
                         }
-                        // --- AKHIR NOTIFIKASI ---
-            
                     } else if (state === 'awaiting_city_change_location') {
                         const successMessage = `✅ Lokasi berhasil diubah! Pengingat sekarang diatur untuk kota *${finalCityName}*.\n\n> © MUADZIN BOT`;
                         await sock.sendMessage(from, { text: successMessage }, { quoted: msg });
@@ -967,29 +898,18 @@ async function connectToWhatsApp() {
                     await scheduleRemindersForUser(sock, from, finalCityName, subscriberName);
                     delete userState[from];
                 } else {
-                    await sock.sendMessage(from, { text: `Maaf, Terjadi sedikit kendala saat mengambil data untuk kota *${finalCityName}*. Coba beberapa saat lagi ya.` });
+                    const failedMessage = `Maaf, kota *"${finalCityName}"* tidak ditemukan atau terjadi kesalahan saat mengambil data. Mohon pastikan ejaan nama kota sudah benar.\n\n> © MUADZIN BOT`;
+                    await sock.sendMessage(from, { text: failedMessage });
                 }
-                
                 return;
             }
-
-
             
-            if (isGroup && !body.trim().startsWith('/')) {
-                return;
-            }
+            if (isGroup && !body.trim().startsWith('/')) return;
 
             await sock.sendPresenceUpdate('composing', from);
             
-            let totalPersonalUsers = 0;
-            let totalGroupUsers = 0;
-            for (const jid of Object.keys(subscribers)) {
-                if (isJidGroup(jid)) {
-                    totalGroupUsers++;
-                } else {
-                    totalPersonalUsers++;
-                }
-            }
+            let totalPersonalUsers = Object.keys(subscribers).filter(j => !isJidGroup(j)).length;
+            let totalGroupUsers = Object.keys(subscribers).filter(j => isJidGroup(j)).length;
 
             const lowerBody = body.trim().toLowerCase();
             const command = lowerBody.split(' ')[0];
@@ -998,13 +918,11 @@ async function connectToWhatsApp() {
 
             switch (command) {
                 case '/aturpengingat':
-                    // PERBAIKAN: Cek jika user sudah berlangganan
                     if (subscribers[from]) {
                         await sock.sendMessage(from, { text: `🔔 *Kamu Sudah Berlangganan*\n\nPengingat sudah aktif untuk kota *${subscribers[from].city}*.\n\n- Untuk mengubah lokasi, gunakan perintah \`/gantilokasi\`.\n- Untuk berhenti menerima pengingat, gunakan perintah \`/berhenti\`.\n\n> © MUADZIN BOT` }, { quoted: msg });
                     } else {
-                        // PERBAIKAN: Menambahkan saran /kota saat meminta input
                         userState[from] = 'awaiting_city_subscribe';
-                        await sock.sendMessage(from, { text: "Silakan ketik nama kota yang kamu inginkan untuk mengatur pengingat waktu Sholat.\n\nContoh: `Pekanbaru`\n\n_Untuk melihat daftar kota yang didukung, ketik */kota*_\n\n> © MUADZIN BOT" }, { quoted: msg });
+                        await sock.sendMessage(from, { text: "Silakan ketik nama kota yang kamu inginkan untuk mengatur pengingat waktu Sholat.\n\nContoh: `Pekanbaru`\n\n> © MUADZIN BOT" }, { quoted: msg });
                     }
                     break;
 
@@ -1013,39 +931,31 @@ async function connectToWhatsApp() {
                         await sock.sendMessage(from, { text: "Maaf, kamu belum berlangganan pengingat.\n\nSilakan atur pengingat dulu dengan perintah `/aturpengingat`.\n\n> © MUADZIN BOT" }, { quoted: msg });
                         return;
                     }
-                    // PERBAIKAN: Menambahkan saran /kota saat meminta input
                     userState[from] = 'awaiting_city_change_location';
-                    await sock.sendMessage(from, { text: `📍 Lokasi saat ini: *${subscribers[from].city}*.\n\nSilakan ketik nama kota baru untuk mengubah lokasi pengingat.\n\n_Ketik \`/kota\` untuk melihat contoh nama kota._\n\n> © MUADZIN BOT` }, { quoted: msg });
+                    await sock.sendMessage(from, { text: `📍 Lokasi saat ini: *${subscribers[from].city}*.\n\nSilakan ketik nama kota baru untuk mengubah lokasi pengingat.\n\n> © MUADZIN BOT` }, { quoted: msg });
                     break;
                 
-                                case '/berhenti':
-                case '/unsubscribe': // Alias
+                case '/berhenti':
+                case '/unsubscribe':
                     if (subscribers[from]) {
-                        // Langkah 1: Ambil data user yang mau berhenti SEBELUM dihapus
                         const unsubscriberData = subscribers[from]; 
-                        
-                        // Langkah 2: Hapus data dari database
                         delete subscribers[from];
                         saveData(SUBSCRIBERS_FILE, subscribers);
                         
-                        // Langkah 3: Batalkan semua jadwal yang berjalan untuk user tersebut
                         if (scheduledJobs[from]) {
                             scheduledJobs[from].forEach(job => job.cancel());
                             delete scheduledJobs[from];
                         }
                         
-                        // Langkah 4: Kirim pesan konfirmasi ke user yang berhenti
                         await sock.sendMessage(from, { text: "✅ Langganan berhasil diberhentikan.\n\nTerima kasih banyak telah menjadi bagian dari perjalanan Muadzin Bot.\nSemoga Allah SWT senantiasa memudahkanmu dalam menjaga konsistensi dalam melaksanakan sholat tepat waktu. Jika nanti berubah pikiran, aku akan selalu ada di sini untuk membantu mengingatkanmu kembali. Sampai jumpa lagi! 👋😊\n\n> © MUADZIN BOT" }, { quoted: msg });
                         
-                        // Langkah 5: Kirim notifikasi ke owner (sekarang sudah aman)
                         try {
                             const totalSubscribers = Object.keys(subscribers).length;
                             const ownerJid = `${OWNER_NUMBER}@s.whatsapp.net`;
-                            // Menggunakan 'unsubscriberData' yang sudah kita simpan di awal
                             const notifMessage = `🔕 *BERHENTI LANGGANAN*\n\nBaru saja ada user yang berhenti langganan, berikut detailnya:\n\n> 👤 *Nama:* ${unsubscriberData.name}\n> 📞 *Nomor:* ${from.split('@')[0]}\n> 🏙️ *Kota Terdaftar:* ${unsubscriberData.city}\n> 📊 *Total Pelanggan Saat Ini:* ${totalSubscribers}\n\n> © MUADZIN BOT`;
                             await sock.sendMessage(ownerJid, { text: notifMessage });
                         } catch (e) {
-                            console.error("[OWNER NOTIF ERROR] Gagal mengirim notifikasi unsubscribe ke owner:", e);
+                            console.error("[OWNER NOTIF ERROR] Gagal mengirim notifikasi:", e);
                         }
                         
                     } else {
@@ -1053,42 +963,21 @@ async function connectToWhatsApp() {
                     }
                     break;
 
-                                                case '/jadwal':
+                case '/jadwal':
                     const targetCity = cityArg || (subscribers[from] ? subscribers[from].city : null);
                     if (!targetCity) {
-                        await sock.sendMessage(from, { text: "Ketikkan nama kota yang ingin kamu cek jadwal nya atau atur pengingat terlebih dahulu.\n\n*Panduan:*\n- Cek jadwal kota lain: `/jadwal Nama Kota`\n- Lihat daftar nama kota: `/kota`\n- Atur jadwal pengingat otomatis: `/aturpengingat`\n\n> © MUADZIN BOT" }, { quoted: msg });
+                        await sock.sendMessage(from, { text: "Ketikkan nama kota yang ingin kamu cek jadwal nya atau atur pengingat terlebih dahulu.\n\n*Panduan:*\n- Cek jadwal kota lain: `/jadwal Nama Kota`\n- Atur jadwal pengingat otomatis: `/aturpengingat`\n\n> © MUADZIN BOT" }, { quoted: msg });
                         return;
                     }
 
-                    // --- PRA-VALIDASI UNTUK /JADWAL ---
-                    if (cityArg) {
-                        const normalizedCity = cityArg.toLowerCase();
-                        if (!KOTA_VALID.has(normalizedCity)) {
-                            const fallbackMessage = `Maaf, kota *"${targetCity}"* tidak kami kenali atau tidak ada dalam daftar kota server kami 😔\n\nPastikan ejaan sudah benar dan merupakan kota/kabupaten di Indonesia.\n\nKetik \`/kota\` untuk melihat beberapa contoh kota yang didukung.\n\n> © MUADZIN BOT`;
-                            await sock.sendMessage(from, { text: fallbackMessage });
-                            return; 
-                        }
-                    }
-                    // --- AKHIR DARI PRA-VALIDASI ---
-
                     await sock.sendMessage(from, { text: `Mencari jadwal untuk *${targetCity}*...` });
-                    const prayerDataToday = await fetchPrayerTimes(targetCity, new Date());
+                    const prayerDataToday = await fetchPrayerTimes(targetCity);
                     
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    const prayerDataTomorrow = await fetchPrayerTimes(targetCity, tomorrow);
-
                     if (prayerDataToday && prayerDataToday.timings) {
                         const timingsToday = prayerDataToday.timings;
-                        
                         const gregorianDate = prayerDataToday.date.gregorian.date;
                         const hijriDate = `${prayerDataToday.date.hijri.day} ${prayerDataToday.date.hijri.month.en} ${prayerDataToday.date.hijri.year}`;
-                        
-                        const now = new Date();
-                        const serverTime = new Intl.DateTimeFormat('id-ID', {
-                            hour: '2-digit', minute: '2-digit', second: '2-digit',
-                            timeZone: 'Asia/Jakarta', hour12: false
-                        }).format(now);
+                        const serverTime = DateTime.now().setZone('Asia/Jakarta').toFormat('HH:mm:ss');
                         const timeZoneString = `GMT+07:00 (WIB)`;
 
                         let scheduleMessage = `*🕌 JADWAL SHOLAT*\n\nJadwal untuk *${targetCity}*\n`;
@@ -1097,173 +986,27 @@ async function connectToWhatsApp() {
                         
                         scheduleMessage += `*Hari ini*\n`;
                         scheduleMessage += `> Imsak: *${timingsToday.Imsak}*\n`;
-                            scheduleMessage += `> Subuh: *${timingsToday.Fajr}*\n`;
-                            scheduleMessage += `> Syuruk (Matahari terbit): *${timingsToday.Sunrise}*\n`;
-                            scheduleMessage += `> Dzuhur: *${timingsToday.Dhuhr}*\n`;
-                            scheduleMessage += `> Ashar: *${timingsToday.Asr}*\n`;
-                            scheduleMessage += `> Ghurub (Matahari terbenam): *${timingsToday.Sunset}*\n`;
-                            scheduleMessage += `> Maghrib: *${timingsToday.Maghrib}*\n`;
-                            scheduleMessage += `> Isya: *${timingsToday.Isha}*\n`;
-                            scheduleMessage += `> Tahajud (⅓ Malam Awal): *${timingsToday.Firstthird}*\n`;
-                            scheduleMessage += `> Tengah Malam: *${timingsToday.Midnight}*\n`;
-                            scheduleMessage += `> Tahajud (⅓ Malam Akhir): *${timingsToday.Lastthird}*\n`;
-
-                        if (prayerDataTomorrow && prayerDataTomorrow.timings) {
-                            const timingsTomorrow = prayerDataTomorrow.timings;
-                            scheduleMessage += `\n*Besok*\n`;
-                            scheduleMessage += `> Imsak: *${timingsTomorrow.Imsak}*\n`;
-                            scheduleMessage += `> Subuh: *${timingsTomorrow.Fajr}*\n`;
-                            scheduleMessage += `> Syuruk (Matahari terbit): *${timingsTomorrow.Sunrise}*\n`;
-                            scheduleMessage += `> Dzuhur: *${timingsTomorrow.Dhuhr}*\n`;
-                            scheduleMessage += `> Ashar: *${timingsTomorrow.Asr}*\n`;
-                            scheduleMessage += `> Ghurub (Matahari terbenam): *${timingsTomorrow.Sunset}*\n`;
-                            scheduleMessage += `> Maghrib: *${timingsTomorrow.Maghrib}*\n`;
-                            scheduleMessage += `> Isya: *${timingsTomorrow.Isha}*\n`;
-                            scheduleMessage += `> Tahajud (⅓ Malam Awal): *${timingsTomorrow.Firstthird}*\n`;
-                            scheduleMessage += `> Tengah Malam: *${timingsTomorrow.Midnight}*\n`;
-                            scheduleMessage += `> Tahajud (⅓ Malam Akhir): *${timingsTomorrow.Lastthird}*\n`;
-                        }
+                        scheduleMessage += `> Subuh: *${timingsToday.Fajr}*\n`;
+                        scheduleMessage += `> Syuruk (Matahari terbit): *${timingsToday.Sunrise}*\n`;
+                        scheduleMessage += `> Dzuhur: *${timingsToday.Dhuhr}*\n`;
+                        scheduleMessage += `> Ashar: *${timingsToday.Asr}*\n`;
+                        scheduleMessage += `> Ghurub (Matahari terbenam): *${timingsToday.Sunset}*\n`;
+                        scheduleMessage += `> Maghrib: *${timingsToday.Maghrib}*\n`;
+                        scheduleMessage += `> Isya: *${timingsToday.Isha}*\n`;
+                        scheduleMessage += `> Tahajud (⅓ Malam Awal): *${timingsToday.Firstthird}*\n`;
+                        scheduleMessage += `> Tengah Malam: *${timingsToday.Midnight}*\n`;
+                        scheduleMessage += `> Tahajud (⅓ Malam Akhir): *${timingsToday.Lastthird}*\n`;
 
                         scheduleMessage += `\n${calculateCountdown(timingsToday)}`;
-                        
-                        // PERUBAHAN DI SINI: Kondisi "if (cityArg)" dihapus
                         scheduleMessage += `\n\n*PANDUAN*\n- Cek jadwal kota lain: \`/jadwal Nama Kota\`\n- Lihat daftar lengkap kota: \`/kota\``;
-                        
                         scheduleMessage += `\n\n> © MUADZIN BOT`;
+                        
                         await sock.sendMessage(from, { text: scheduleMessage }, { quoted: msg });
                     } else {
-                        await sock.sendMessage(from, { text: `Maaf, terjadi kendala saat mengambil data untuk kota *${targetCity}*. Coba periksa lagi ejaannya atau lihat daftar di \`/kota\`\n\n> © MUADZIN BOT` });
+                        await sock.sendMessage(from, { text: `Maaf, terjadi kendala saat mengambil data untuk kota *${targetCity}*. Mohon periksa kembali ejaan nama kota.\n\n> © MUADZIN BOT` });
                     }
                     break;
-
-
-                // ... (Sisa case seperti /testnotif, /broadcast, dll tetap sama)
-                case '/testnotif':
-                    if (!subscribers[from]) {
-                        await sock.sendMessage(from, { text: "Kamu atau grup ini harus subscribe dulu untuk menggunakan fitur tes ini. Ketik `/aturpengingat`" });
-                        return;
-                    }
-                    let prayerToTest = args[0]?.toLowerCase();
-                    if (prayerToTest === 'subuh') prayerToTest = 'fajr';
-                    else if (prayerToTest === 'dzuhur') prayerToTest = 'dhuhr';
-                    else if (prayerToTest === 'ashar') prayerToTest = 'asr';
-                    
-                    const validPrayers = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
-                    if (!prayerToTest || !validPrayers.includes(prayerToTest)) {
-                        await sock.sendMessage(from, { text: `Gunakan format: \`/testnotif <nama_sholat>\`\nContoh: \`/testnotif ashar\`\n\nPilihan: subuh, dzuhur, ashar, maghrib, isha` });
-                        return;
-                    }
-                    const userCity = subscribers[from].city;
-                    const testPrayerData = await fetchPrayerTimes(userCity);
-                    if (testPrayerData && testPrayerData.timings) {
-                        const testTimings = testPrayerData.timings;
-                        const prayerNameAPI = prayerToTest.charAt(0).toUpperCase() + prayerToTest.slice(1);
-                        const prayerTime = testTimings[prayerNameAPI];
-                        const subscriberName = subscribers[from].name || 'Kawan';
-                        await sock.sendMessage(from, { text: `OK, menjalankan tes notifikasi untuk sholat *${PRAYER_NAMES_MAP[prayerNameAPI].toUpperCase()}*...` });
-                        await sendPrayerNotification(sock, from, prayerNameAPI, prayerTime, userCity, subscriberName, testTimings);
-                    } else {
-                        await sock.sendMessage(from, { text: "Gagal mendapatkan data jadwal untuk tes." });
-                    }
-                    break;
-                case '/testdzikir':
-                    const ownerJidTest = `${OWNER_NUMBER}@s.whatsapp.net`;
-                    if (from !== ownerJidTest) {
-                        await sock.sendMessage(from, { text: `Maaf, perintah ini hanya untuk Owner.` });
-                        return;
-                    }
-                    const dzikirType = args[0]?.toLowerCase();
-                    if (dzikirType === 'pagi' || dzikirType === 'petang') {
-                        await sock.sendMessage(from, { text: `OK, menjalankan tes Dzikir *${dzikirType.toUpperCase()}*...` });
-                        await sendDzikir(sock, from, dzikirType);
-                    } else {
-                        await sock.sendMessage(from, { text: `Gunakan format: \`/testdzikir <pagi/petang>\`\nContoh: \`/testdzikir pagi\`` });
-                    }
-                    break;
-                case '/testalkahfi':
-                    const ownerJidKahfi = `${OWNER_NUMBER}@s.whatsapp.net`;
-                    if (from !== ownerJidKahfi) {
-                        await sock.sendMessage(from, { text: `Maaf, perintah ini hanya untuk Owner.` });
-                        return;
-                    }
-                    await sock.sendMessage(from, { text: `OK, menjalankan tes pengingat Al-Kahfi...` });
-                    await sendAlKahfiReminder(sock, from);
-                    break;
-                                case '/testdoa':
-                    await sock.sendMessage(from, { text: "OK, menjalankan tes kirim Doa & Harapan Harian..." });
-
-                    // Memastikan Bank Doa sudah ada dan tidak kosong
-                    if (typeof DOA_HARIAN !== 'undefined' && DOA_HARIAN.length > 0) {
-                        // Mengambil satu pesan acak dari bank doa
-                        const randomWish = DOA_HARIAN[Math.floor(Math.random() * DOA_HARIAN.length)];
-                        
-                        // Membungkus pesan dengan format yang sama seperti pengiriman terjadwal
-                        const messageToSend = `*✨ PESAN KEBAIKAN UNTUKMU ✨*\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
-
-                        // Mengirim pesan tes hanya ke nomor Anda
-                        await sock.sendMessage(from, { text: messageToSend });
-                    } else {
-                        await sock.sendMessage(from, { text: "Maaf, 'Bank Doa' (DOA_HARIAN) sepertinya belum didefinisikan di kodemu." });
-                    }
-                    break;    
-                case '/broadcast':
-                    const ownerJid = `${OWNER_NUMBER}@s.whatsapp.net`;
-                    if (from !== ownerJid) {
-                        await sock.sendMessage(from, { text: `Maaf, perintah ini hanya untuk Owner.` });
-                        return;
-                    }
-
-                    const replied = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
-                    const isMediaMsg = msg.message.imageMessage || msg.message.videoMessage;
-
-                    let broadcastMessageContent = args.join(' ');
-                    let mediaBuffer = null;
-                    let mediaType = null;
-
-                    if (isMediaMsg && lowerBody.startsWith('/broadcast')) {
-                        mediaType = msg.message.imageMessage ? 'image' : 'video';
-                        mediaBuffer = await downloadMediaMessage(msg, 'buffer', {}, { logger: pino({ level: 'silent' }) });
-                        broadcastMessageContent = body.substring('/broadcast'.length).trim();
-                    } 
-                    else {
-                        if (replied && replied.conversation) {
-                            broadcastMessageContent = replied.conversation;
-                        }
-                    }
-
-                    if (!broadcastMessageContent && !mediaBuffer) {
-                        await sock.sendMessage(from, { text: `Gunakan format:\n1. \`/broadcast <pesan>\`\n2. Reply pesan teks, lalu ketik \`/broadcast\`\n3. Kirim gambar/video dengan caption \`/broadcast <pesan>\`` });
-                        return;
-                    }
-
-                    const subscriberJids = Object.keys(subscribers);
-                    await sock.sendMessage(from, { text: `📢 Memulai broadcast ke *${subscriberJids.length}* pelanggan...` });
-                    const broadcastStickerPath = './stickers/broadcast.webp';
-
-                    for (const jid of subscriberJids) {
-                        try {
-                            if (fs.existsSync(broadcastStickerPath)) {
-                                await sock.sendMessage(jid, { sticker: { url: broadcastStickerPath } });
-                            }
-
-                            let finalMessage = {};
-                            const formattedCaption = `📢 *BROADCAST*\n\n${broadcastMessageContent}\n\n> Admin ARH`;
-
-                            if (mediaBuffer && mediaType) {
-                                finalMessage[mediaType] = mediaBuffer;
-                                finalMessage.caption = formattedCaption;
-                            } else {
-                                finalMessage = { text: formattedCaption };
-                            }
-
-                            await sock.sendMessage(jid, finalMessage);
-                            await new Promise(resolve => setTimeout(resolve, 1000));
-                        } catch (e) {
-                            console.error(`[BROADCAST ERROR] Gagal mengirim ke ${jid}:`, e.message);
-                        }
-                    }
-                    await sock.sendMessage(from, { text: `✅ Broadcast selesai!` });
-                    break;
+                
                 case '/infobot':
                     const latency = Date.now() - (msg.messageTimestamp * 1000);
                     const uptime = formatUptime(botStartTime);
@@ -1278,240 +1021,57 @@ async function connectToWhatsApp() {
                                      `> © MUADZIN BOT`;
                     await sock.sendMessage(from, { text: infoText });
                     break;
+
                 case '/kota':
                     await sock.sendMessage(from, { text: KOTA_LIST_TEXT });
                     break;
+
                 case '/panduan':
                     await sock.sendMessage(from, { text: PANDUAN_TEXT });
                     break;
+
                 case '/donasi':
                     try {
-                        await sock.sendMessage(from, { 
-                            image: { url: DONATION_IMAGE_URL },
-                            caption: DONASI_TEXT
-                        });
+                        await sock.sendMessage(from, { image: { url: DONATION_IMAGE_URL }, caption: DONASI_TEXT });
                     } catch (e) {
                         console.error("[ERROR] Gagal mengirim gambar donasi:", e.message);
                         await sock.sendMessage(from, { text: "Maaf, gagal memuat gambar donasi saat ini, silakan ulang kembali. Berikut informasinya:\n\n" + DONASI_TEXT });
                     }
                     break;
+
                 case '/owner':
                     await sock.sendMessage(from, { text: OWNER_TEXT });
                     break;
+
                 case '/randomayat':
                     await sendDailyVerse(sock, from, false);
                     break;
+
                 case '/menu':
                 case '/help':
                     await sock.sendMessage(from, { text: generateMenuText(userName, totalPersonalUsers, totalGroupUsers, isGroup) });
                     break;
+                
                 default:
                     if (command.startsWith('/')) {
                         await sock.sendMessage(from, { text: `Maaf, aku belum mengerti perintah *${command}*\n\nCoba ketik */menu* untuk melihat semua hal yang bisa aku bantu ya, *${userName}*.\n\n> © MUADZIN BOT` });
                     } else if (!isGroup) {
-                        const welcomeStickerPath = './stickers/assalamualaikum.webp';
-                        if (fs.existsSync(welcomeStickerPath)) {
-                            await sock.sendMessage(from, { sticker: { url: welcomeStickerPath } });
-                        }
-                        
-                                        
-                        
-                        // =======================================================
-                        // >>> PERUBAHAN LUXON DIMULAI DI SINI <<<
-                        // =======================================================
-
-                        // Menggunakan Luxon untuk mendapatkan waktu WIB yang akurat
-                        const nowInJakarta = DateTime.now().setZone('Asia/Jakarta');
-                        const hour = nowInJakarta.hour;
-
-                        // 1. Menentukan sapaan berdasarkan waktu (logika ini tidak berubah)
-                        let timeOfDayGreeting = "";
-                        let timeOfDayEmoji = "";
-
-                        if (hour >= 4 && hour < 10) {
-                            timeOfDayGreeting = "Selamat pagi";
-                            timeOfDayEmoji = "☀️";
-                        } else if (hour >= 10 && hour < 15) {
-                            timeOfDayGreeting = "Selamat siang";
-                            timeOfDayEmoji = "🌤️";
-                        } else if (hour >= 15 && hour < 18) {
-                            timeOfDayGreeting = "Selamat sore";
-                            timeOfDayEmoji = "🌇";
-                        } else {
-                            timeOfDayGreeting = "Selamat malam";
-                            timeOfDayEmoji = "🌙";
-                        }
-                        
-                        // Memilih satu doa secara acak (logika ini tidak berubah)
-                        const dynamicWishes = [
-                            "Semoga Allah SWT selalu melimpahkan rahmat dan berkah-Nya di setiap langkahmu hari ini. 🤲",
-                            "Semoga hari ini menjadi awal yang penuh kemudahan dan keberkahan dari Allah SWT. 🤲",
-                            "Semoga Allah SWT mengisi pagimu dengan ketenangan dan hati yang penuh syukur. 🤲",
-                            "Semoga Allah SWT melindungimu dari segala mara bahaya dan menjadikan harimu penuh kebaikan. 🤲",
-                            "Semoga setiap doamu dikabulkan dan setiap usahamu diberi keberhasilan oleh Allah SWT. 🤲",
-                            "Semoga Allah SWT memberimu kekuatan dan kesabaran dalam menjalani hari yang baru ini. 🤲",
-                            "Semoga Allah SWT limpahkan kebahagiaan dan kedamaian dalam hatimu hari ini. 🤲",
-                            "Semoga segala urusanmu hari ini dimudahkan dan diberkahi oleh Allah SWT. 🤲",
-                            "Semoga cahaya iman dan taqwa menerangi langkahmu sepanjang hari ini. 🤲",
-                            "Semoga Allah SWT mengampuni dosa-dosamu dan menerima amal ibadahmu hari ini. 🤲",
-                            "Semoga hatimu selalu dipenuhi dengan rasa syukur dan cinta kepada Allah SWT. 🤲",
-                            "Semoga Allah SWT jadikan pagimu ini sebagai awal kesuksesan dan kebahagiaan. 🤲",
-                            "Semoga setiap nafas yang kau hirup hari ini membawa berkah dan rahmat Allah SWT. 🤲",
-                            "Semoga Allah SWT menuntunmu pada jalan yang lurus dan penuh keberkahan. 🤲",
-                            "Semoga harimu dipenuhi dengan kebaikan yang mengalir dari rahmat Allah SWT. 🤲",
-                            "Semoga Allah SWT bukakan pintu rezeki yang halal dan berkah untukmu hari ini. 🤲",
-                            "Semoga setiap langkahmu hari ini mendapat ridha dan kasih sayang Allah SWT. 🤲",
-                            "Semoga Allah SWT jauhkanmu dari segala kesulitan dan ujian yang berat hari ini. 🤲",
-                            "Semoga Allah SWT jadikan pagimu penuh dengan dzikir dan pengingat kebaikan. 🤲",
-                            "Semoga keberkahan dan ampunan Allah SWT selalu menyertai setiap aktivitasmu hari ini. 🤲"
-                        ];
-                        const randomWish = dynamicWishes[Math.floor(Math.random() * dynamicWishes.length)];
-
-                        // Menyusun pesan selamat datang (logika ini tidak berubah)
-                        const welcomeMessageText = `Ahlan wa Sahlan *${userName}*! ${timeOfDayGreeting} ${timeOfDayEmoji}\n\nAku Muadzin Bot, asisten pengingat waktu sholat mu ✨\n\nUntuk memulai, silakan gunakan salah satu perintah berikut:  \n- \`/menu\` - untuk melihat semua fitur yang bisa kamu gunakan  \n- \`/panduan\` - jika kamu memerlukan bantuan atau penjelasan\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
-                        
-                        await sock.sendMessage(from, { 
-                            text: welcomeMessageText,
-                        });
-
-                        // =======================================================
-                        // >>> PERUBAHAN LUXON SELESAI DI SINI <<<
-                        // =======================================================
+                        const welcomeMessageText = `Ahlan wa Sahlan *${userName}*! Aku Muadzin Bot, asisten pengingat waktu sholat mu ✨\n\nUntuk memulai, silakan gunakan salah satu perintah berikut:  \n- \`/menu\` - untuk melihat semua fitur yang bisa kamu gunakan  \n- \`/panduan\` - jika kamu memerlukan bantuan atau penjelasan\n\n_${DOA_HARIAN[Math.floor(Math.random() * DOA_HARIAN.length)]}_\n\n> © MUADZIN BOT`;
+                        await sock.sendMessage(from, { text: welcomeMessageText });
                     }
                     break;
-
             }
 
         } catch (error) {
-            console.error("[ERROR] Gagal memproses pesan:", error);
+            console.error("[ERROR UTAMA] Gagal memproses pesan:", error);
         } finally {
             await sock.sendPresenceUpdate('paused', from);
         }
     });
+}
 
-    // ========================================================================
-// >>> GANTI SELURUH FUNGSI connectToWhatsApp LAMA DENGAN YANG DI BAWAH INI <<<
-// ========================================================================
-
-function connectToWhatsApp() {
-    // ... (pastikan variabel sock, schedule, DisconnectReason, dll sudah di-import/didefinisikan di atas fungsi ini)
-
-    sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect } = update;
-
-        if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('Koneksi terputus:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
-            if (shouldReconnect) {
-                connectToWhatsApp();
-            }
-        } else if (connection === 'open') {
-            console.log('Berhasil terhubung ke WhatsApp! Bot siap digunakan.');
-
-            // Menjadwalkan ulang pengingat sholat untuk semua pelanggan saat bot online
-            for (const jid in subscribers) {
-                const subscriberData = subscribers[jid];
-                await scheduleRemindersForUser(sock, jid, subscriberData.city, subscriberData.name || 'Kawan');
-            }
-
-            // =================================================================
-            // >> PENJADWALAN GLOBAL DENGAN TIMEZONE WIB (ASIA/JAKARTA) <<
-            // =================================================================
-
-            // --- JADWAL AYAT ACAK (12:40 & 18:40 WIB) ---
-            const verseSchedule = new schedule.RecurrenceRule();
-            verseSchedule.tz = 'Asia/Jakarta';
-            verseSchedule.hour = [12, 18];
-            verseSchedule.minute = 40;
-
-            schedule.scheduleJob(verseSchedule, async () => {
-                console.log(`[INFO] Mengirim Random Ayat berkala (WIB) ke semua pelanggan...`);
-                for (const jid in subscribers) {
-                    try {
-                        await sendDailyVerse(sock, jid, true);
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    } catch (e) {
-                        console.error(`[RANDOM AYAT ERROR] Gagal mengirim ke ${jid}:`, e.message);
-                    }
-                }
-            });
-
-            // --- JADWAL DOA & HARAPAN BAIK (09:00 & 20:00 WIB) ---
-            const wishSchedule = new schedule.RecurrenceRule();
-            wishSchedule.tz = 'Asia/Jakarta';
-            wishSchedule.hour = [9, 20];
-            wishSchedule.minute = 0;
-
-            schedule.scheduleJob(wishSchedule, async () => {
-                console.log(`[INFO] Mengirim Doa & Harapan Harian (WIB) ke semua pelanggan...`);
-                const randomWish = DOA_HARIAN[Math.floor(Math.random() * DOA_HARIAN.length)];
-                const messageToSend = `*✨ PESAN KEBAIKAN UNTUKMU ✨*\n\n_${randomWish}_\n\n> © MUADZIN BOT`;
-                for (const jid in subscribers) {
-                    try {
-                        await sock.sendMessage(jid, { text: messageToSend });
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    } catch (e) {
-                        console.error(`[DOA HARIAN ERROR] Gagal mengirim ke ${jid}:`, e.message);
-                    }
-                }
-            });
-
-            // --- JADWAL DZIKIR PAGI (07:00 WIB) ---
-            const dzikirPagiRule = new schedule.RecurrenceRule();
-            dzikirPagiRule.hour = 7;
-            dzikirPagiRule.minute = 0;
-            dzikirPagiRule.tz = 'Asia/Jakarta';
-
-            schedule.scheduleJob(dzikirPagiRule, async () => {
-                console.log("[INFO] Mengirim Dzikir Pagi ke semua pelanggan...");
-                for (const jid in subscribers) {
-                    await sendDzikir(sock, jid, 'pagi');
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Jeda konsisten
-                }
-            });
-
-            // --- JADWAL DZIKIR PETANG (16:00 WIB) ---
-            const dzikirPetangRule = new schedule.RecurrenceRule();
-            dzikirPetangRule.hour = 16;
-            dzikirPetangRule.minute = 0;
-            dzikirPetangRule.tz = 'Asia/Jakarta';
-
-            schedule.scheduleJob(dzikirPetangRule, async () => {
-                console.log("[INFO] Mengirim Dzikir Petang ke semua pelanggan...");
-                for (const jid in subscribers) {
-                    await sendDzikir(sock, jid, 'petang');
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Jeda konsisten
-                }
-            });
-
-            // --- JADWAL AL-KAHFI (Jumat, 08:00 WIB) ---
-            const alKahfiRule = new schedule.RecurrenceRule();
-            alKahfiRule.dayOfWeek = 5; // 5 = Jumat
-            alKahfiRule.hour = 8;
-            alKahfiRule.minute = 0;
-            alKahfiRule.tz = 'Asia/Jakarta';
-
-            schedule.scheduleJob(alKahfiRule, async () => {
-                console.log("[INFO] Mengirim pengingat Al-Kahfi ke semua pelanggan...");
-                for (const jid in subscribers) {
-                    await sendAlKahfiReminder(sock, jid);
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Jeda konsisten
-                }
-            });
-        }
-    });
-} // <-- Ini adalah penutup untuk fungsi connectToWhatsApp. Strukturnya sudah benar.
-
-// ========================================================================
-// >>> KODE DI BAWAH INI BIARKAN SEPERTI ASLINYA, JANGAN DIUBAH <<<
-// ========================================================================
-
-// =======================================================
-// >>> MULAI KODE KEEP-ALIVE (LETAKKAN DI SINI) <<<
-// =======================================================
-
+// --- BAGIAN AKHIR: SERVER KEEP-ALIVE & EKSEKUSI BOT ---
 const PORT = process.env.PORT || 3000;
-
 http.createServer((req, res) => {
   res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('SERVER is alive and running! Support by @arhverse x NUSA KARSA');
@@ -1519,28 +1079,4 @@ http.createServer((req, res) => {
   console.log(`[SERVER] Keep-alive server berjalan di port ${PORT}`);
 });
 
-// =======================================================
-// >>> SELESAI KODE KEEP-ALIVE <<<
-// =======================================================
-
-// Memulai koneksi bot
 connectToWhatsApp();
-
-
-// /--- KODE AUTO-RESTART ---
-const watcher = chokidar.watch(__filename);
-
-watcher.on('change', path => {
-  console.log(`[RELOADER] Perubahan terdeteksi pada ${path}. Merestart bot...`);
-  watcher.close();
-  
-  const newProcess = spawn(process.execPath, process.argv.slice(1), {
-    detached: true,
-    stdio: 'inherit'
-  });
-  
-  newProcess.unref();
-  
-  process.exit();
-});
-
