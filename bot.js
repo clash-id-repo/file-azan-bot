@@ -331,7 +331,9 @@ maka tidak ada sesuatu pun yang akan membahayakannya hingga ia pergi dari tempat
 Semoga kita semua selalu dalam lindungan-Nya. 🙏\n\n> © MUADZIN BOT`;
 
 
-const PANDUAN_TEXT = `📖 *PANDUAN PENGGUNAAN MUADZIN BOT* 1️⃣ *Melihat Jadwal Sholat*
+const PANDUAN_TEXT = `📖 *PANDUAN PENGGUNAAN MUADZIN BOT* 
+
+1️⃣ *Melihat Jadwal Sholat*
 Ketik \`/jadwal\` untuk melihat jadwal sholat di kota yang telah kamu atur.
 Untuk melihat jadwal di kota lain, ketik \`/jadwal Nama Kota\`.
 > Contoh: \`/jadwal Pekanbaru\`
@@ -356,13 +358,17 @@ Gunakan perintah \`/infobot\`, \`/kota\`, \`/donasi\`, atau \`/owner\` untuk inf
 💫 *SUKA BOT INI?*
 Silakan share bot ini kesemua kenalan kamu agar mendapatkan manfaatnya juga dan Dukung bot ini dengan berdonasi melalui perintah \`/donasi\`.\n\n> © MUADZIN BOT`;
 
-const DONASI_TEXT = `💝 *DUKUNG MUADZIN BOT* Terima kasih sudah berdonasi untuk mendukung bot ini! Setiap dukungan darimu sangat berarti agar bot bisa terus aktif dan dikembangkan dengan fitur-fitur baru.
+const DONASI_TEXT = `💝 *DUKUNG MUADZIN BOT*
+
+Terima kasih sudah berdonasi untuk mendukung bot ini! Setiap dukungan darimu sangat berarti agar bot bisa terus aktif dan dikembangkan dengan fitur-fitur baru.
 
 Kamu bisa memberikan donasi melalui QRIS di atas dengan menggunakan dompet digital atau Mobile Banking yang kamu miliki.
 
 Terima kasih banyak atas kebaikanmu, semoga Allah SWT SWT melipat gandakan rezekimu! ✨\n\n> © MUADZIN BOT`;
 
-const OWNER_TEXT = `👨‍💻 *INFORMASI OWNER* Bot ini dibuat dan dikelola oleh ARH [@arhverse] x NUSA KARSA [nusakarsa.id]. Jika kamu menemukan bug, punya saran, atau butuh bantuan, silakan hubungi owner.
+const OWNER_TEXT = `👨‍💻 *INFORMASI OWNER* 
+
+Bot ini dibuat dan dikelola oleh ARH [@arhverse] x NUSA KARSA [nusakarsa.id]. Jika kamu menemukan bug, punya saran, atau butuh bantuan, silakan hubungi owner.
 
 💬 *WhatsApp:* wa.me/${OWNER_NUMBER}
 
