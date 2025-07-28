@@ -17,6 +17,6 @@
     "chokidar": "^4.0.3",
     "luxon": "^3.7.1",
     "node-schedule": "^2.1.1",
-    "qrcode-terminal": "^0.12.0"
+    "qrcode": "^1.5.4"
   }
 }
