@@ -7,7 +7,7 @@ const {
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const fs =require('fs');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
 const axios = require('axios');
 const schedule = require('node-schedule');
 // --- PENAMBAHAN UNTUK AUTO-RESTART ---
@@ -768,10 +768,9 @@ async function scheduleRemindersForUser(sock, jid, city, userName) {
     }
 }
 
-
 // --- FUNGSI UTAMA BOT ---
 async function connectToWhatsApp() {
-    loadInitialData();
+    // loadInitialData(); // Pastikan fungsi ini didefinisikan atau hapus jika tidak ada
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
     const sock = makeWASocket({
@@ -779,7 +778,7 @@ async function connectToWhatsApp() {
         auth: state,
         browser: ['ARHBot', 'Chrome', '18.3.0'],
         syncFullHistory: false,
-     
+        printQRInTerminal: false // <-- PERUBAHAN 1: Matikan print QR di terminal
     });
 
     sock.ev.on('creds.update', saveCreds);
@@ -787,16 +786,27 @@ async function connectToWhatsApp() {
     sock.ev.on('connection.update', (update) => {
         const { connection, lastDisconnect, qr } = update;
 
+        // --- PERUBAHAN 2: Logika penanganan QR Code ---
         if(qr) {
             console.log('------------------------------------------------');
-            console.log('         SILAKAN SCAN QR CODE INI         ');
+            console.log('    QR DITERIMA! SILAKAN AKSES URL RENDER ANDA    ');
             console.log('------------------------------------------------');
-            qrcode.generate(qr, { small: true }); 
-            console.log('------------------------------------------------');
-            console.log('Scan dengan WhatsApp di HP: Setelan > Perangkat Tertaut > Tautkan Perangkat.');
+            // Menyimpan QR ke file, bukan menampilkannya di konsol
+            qrcode.toFile('qr.png', qr, (err) => {
+                if (err) {
+                    console.error('Gagal menyimpan file QR:', err);
+                } else {
+                    console.log('QR Code berhasil disimpan sebagai qr.png. Buka alamat web bot Anda + /qr untuk scan.');
+                    console.log('------------------------------------------------');
+                }
+            });
         }
         
         if(connection === 'close') {
+            // --- PERUBAHAN 3: Hapus file QR jika koneksi tertutup ---
+            if (fs.existsSync('qr.png')) {
+                fs.unlinkSync('qr.png');
+            }
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('Koneksi terputus karena:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
             
@@ -1377,13 +1387,20 @@ async function connectToWhatsApp() {
 
 }
 
-// --- KODE KEEP-ALIVE ---
+// --- KODE KEEP-ALIVE & QR SERVER ---
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('SERVER is alive and running! Support by @arhverse x NUSA KARSA');
+    // Menampilkan QR Code jika file ada dan URL-nya adalah /qr
+    if (req.url === '/qr' && fs.existsSync('qr.png')) {
+        res.writeHead(200, {'Content-Type': 'image/png'});
+        fs.createReadStream('qr.png').pipe(res);
+    } else {
+        // Untuk semua request lain, tampilkan pesan keep-alive
+        res.writeHead(200, {'Content-Type': 'text/plain'});
+        res.end('SERVER is alive and running! Support by @arhverse x NUSA KARSA');
+    }
 }).listen(PORT, () => {
-  console.log(`[SERVER] Keep-alive server berjalan di port ${PORT}`);
+  console.log(`[SERVER] Keep-alive & QR server berjalan di port ${PORT}`);
 });
 
 // --- Memulai koneksi bot ---
