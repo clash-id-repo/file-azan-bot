@@ -768,6 +768,7 @@ async function scheduleRemindersForUser(sock, jid, city, userName) {
     }
 }
 
+
 // --- FUNGSI UTAMA BOT ---
 async function connectToWhatsApp() {
     loadInitialData();
@@ -778,9 +779,9 @@ async function connectToWhatsApp() {
         auth: state,
         browser: ['ARHBot', 'Chrome', '18.3.0'],
         syncFullHistory: false,
-        pairingCode: true
+     
     });
-    
+
     sock.ev.on('creds.update', saveCreds);
 
     sock.ev.on('connection.update', (update) => {
@@ -788,12 +789,13 @@ async function connectToWhatsApp() {
 
         if(qr) {
             console.log('------------------------------------------------');
-            console.log('       PAIRING CODE ANDA       ');
-            console.log(`          ${qr.slice(0, 4)} - ${qr.slice(4)}`);
+            console.log('         SILAKAN SCAN QR CODE INI         ');
             console.log('------------------------------------------------');
-            console.log('Scan dengan WhatsApp di HP: Setelan > Perangkat Tertaut > Tautkan dengan nomor telepon.');
+            qrcode.generate(qr, { small: true }); 
+            console.log('------------------------------------------------');
+            console.log('Scan dengan WhatsApp di HP: Setelan > Perangkat Tertaut > Tautkan Perangkat.');
         }
-
+        
         if(connection === 'close') {
             const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut;
             console.log('Koneksi terputus karena:', lastDisconnect.error, ', menyambungkan kembali:', shouldReconnect);
