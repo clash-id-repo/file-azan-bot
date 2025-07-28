@@ -1275,6 +1275,49 @@ async function connectToWhatsApp() {
                     }
                     await sock.sendMessage(from, { text: `✅ Broadcast selesai!` });
                     break;
+                case '/unblock':
+                    // 1. Cek apakah pengirim adalah Owner
+                    const ownerJidUnblock = `${OWNER_NUMBER}@s.whatsapp.net`;
+                    if (from !== ownerJidUnblock) {
+                        await sock.sendMessage(from, { text: `Maaf, perintah ini hanya untuk Owner.` });
+                        return; // Hentikan proses jika bukan owner
+                    }
+
+                    // 2. Ambil nomor dari argumen
+                    const numberToUnblock = args[0];
+                    if (!numberToUnblock) {
+                        await sock.sendMessage(from, { text: `Gunakan format yang benar:\n\`/unblock <nomor_wa>\`\n\nContoh: \`/unblock 6281234567890\`` });
+                        return;
+                    }
+
+                    // 3. Format nomor menjadi JID
+                    const cleanedNumber = numberToUnblock.replace(/\D/g, '');
+                    const targetJid = `${cleanedNumber}@s.whatsapp.net`;
+
+                    // 4. Pastikan nomornya memang ada di daftar blokir
+                    if (!blockedUsers.has(targetJid)) {
+                        await sock.sendMessage(from, { text: `Nomor *${cleanedNumber}* tidak ditemukan dalam daftar blokir bot.` });
+                        return;
+                    }
+
+                    // 5. Proses Unblock
+                    try {
+                        // Perintah ke WhatsApp untuk unblock
+                        await sock.updateBlockStatus(targetJid, "unblock");
+                        // Hapus dari daftar internal
+                        blockedUsers.delete(targetJid);
+                        // Simpan perubahan ke file
+                        saveData(BLOCKED_USERS_FILE, Array.from(blockedUsers));
+
+                        // 6. Beri notifikasi
+                        await sock.sendMessage(from, { text: `✅ Berhasil! Nomor *${cleanedNumber}* telah dibuka blokirnya.` });
+                        await sock.sendMessage(targetJid, { text: `Alhamdulillah, blokir kamu telah dibuka oleh Owner. Sekarang kamu bisa menggunakan bot ini lagi.\n\nMohon gunakan dengan bijak ya. Ketik \`/menu\` untuk memulai.` });
+
+                    } catch (error) {
+                        console.error(`[UNBLOCK ERROR] Gagal membuka blokir ${targetJid}:`, error);
+                        await sock.sendMessage(from, { text: `Terjadi kesalahan teknis saat mencoba membuka blokir. Silakan cek log konsol.` });
+                    }
+                    break;
                 case '/infobot':
                     const latency = Date.now() - (msg.messageTimestamp * 1000);
                     const uptime = formatUptime(botStartTime);
