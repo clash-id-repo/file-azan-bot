@@ -3,20 +3,23 @@
   "version": "1.0.0",
   "main": "bot.js",
   "scripts": {
-  "start": "node bot.js",
-  "test": "echo \"Error: no test specified\" && exit 1"
-},
-  
+    "start": "node bot.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [],
   "author": "ARH - @arhverse",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@whiskeysockets/baileys": "^6.7.18",
     "axios": "^1.10.0",
     "chokidar": "^4.0.3",
+    "dotenv": "^17.2.1",
+    "full-icu": "^1.5.0",
     "luxon": "^3.7.1",
     "node-schedule": "^2.1.1",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0"
   }
 }
