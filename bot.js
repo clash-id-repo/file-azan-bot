@@ -2027,7 +2027,7 @@ if (!isGroup && !body.startsWith('/') && aiModeIsOn) {
                                 },
                                 message: {
                                     "extendedTextMessage": {
-                                        "text": "Muadzin Bot - Asisten pengingat waktu sholat otomatis ✅.", // 
+                                        "text": "MUADZIN BOT - Asisten pengingat waktu sholat otomatis ✅", // 
                                         "contextInfo": {
                                             "externalAdReply": {
                                                 "title": namaDiHeader,
