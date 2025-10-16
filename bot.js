@@ -18,14 +18,16 @@ const http = require('http'); // <-- Pastikan ini ada di atas
 
 
 // ======================================================
-// --- HTTP Server untuk menampilkan QR code pada /qr ---
+// --- HTTP Server untuk QR dan Keep-Alive (DIGABUNG) ---
 // ======================================================
+const PORT = process.env.PORT || 3000;
+
 const server = http.createServer((req, res) => {
   if (req.url === '/qr') {
     fs.readFile('qr.png', (err, data) => {
       if (err) {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('QR code belum tersedia');
+        res.end('QR code belum tersedia. Tunggu bot melakukan koneksi.');
       } else {
         res.writeHead(200, { 'Content-Type': 'image/png' });
         res.end(data);
@@ -33,12 +35,11 @@ const server = http.createServer((req, res) => {
     });
   } else {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Muadzin Bot berjalan');
+    res.end('SERVER is alive and running! Muadzin Bot by ARHverse x NUSA KARSA');
   }
 });
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`HTTP server berjalan di port ${PORT}`));
 
+server.listen(PORT, () => console.log(`✅ HTTP server berjalan di port ${PORT}`));
 
 // --- PENGATURAN & VARIABEL GLOBAL ---
 const SUBSCRIBERS_FILE = 'subscribers.json';
