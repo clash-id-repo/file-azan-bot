@@ -2096,19 +2096,6 @@ if (!isGroup && !body.startsWith('/') && aiModeIsOn) {
     });
 }
 
-// --- KODE KEEP-ALIVE & QR SERVER ---
-const PORT = process.env.PORT || 3000;
-http.createServer((req, res) => {
-    if (req.url === '/qr' && fs.existsSync('qr.png')) {
-        res.writeHead(200, { 'Content-Type': 'image/png' });
-        fs.createReadStream('qr.png').pipe(res);
-    } else {
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('SERVER is alive and running! Support by @arhverse x NUSA KARSA');
-    }
-}).listen(PORT, () => {
-    console.log(`[SERVER] Keep-alive & QR server berjalan di port ${PORT}`);
-});
 
 // --- Memulai koneksi bot ---
 connectToWhatsApp();
