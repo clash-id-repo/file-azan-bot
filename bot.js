@@ -17,6 +17,29 @@ const { DateTime } = require('luxon');
 const http = require('http'); // <-- Pastikan ini ada di atas
 
 
+// ======================================================
+// --- HTTP Server untuk menampilkan QR code pada /qr ---
+// ======================================================
+const server = http.createServer((req, res) => {
+  if (req.url === '/qr') {
+    fs.readFile('qr.png', (err, data) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('QR code belum tersedia');
+      } else {
+        res.writeHead(200, { 'Content-Type': 'image/png' });
+        res.end(data);
+      }
+    });
+  } else {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Muadzin Bot berjalan');
+  }
+});
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`HTTP server berjalan di port ${PORT}`));
+
+
 // --- PENGATURAN & VARIABEL GLOBAL ---
 const SUBSCRIBERS_FILE = 'subscribers.json';
 const BLOCKED_USERS_FILE = 'blocked_users.json';
